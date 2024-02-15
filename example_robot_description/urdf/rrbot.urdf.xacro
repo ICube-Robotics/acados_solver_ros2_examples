@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- Revolute-Revolute Manipulator -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rrbot">
+
+  <!-- Import RRBot macro -->
+  <xacro:include filename="$(find example_robot_description)/urdf/rrbot_description.urdf.xacro" />
+
+  <!-- Import RRBot ros2_control description -->
+  <xacro:include filename="$(find example_robot_description)/ros2_control/rrbot.ros2_control.xacro" />
+
+  <!-- Used for fixing robot -->
+  <link name="world"/>
+
+  <xacro:rrbot parent="world">
+    <origin xyz="0 0 0" rpy="1.57 0 0" />
+  </xacro:rrbot>
+
+  <xacro:rrbot_ros2_control
+    name="RRBot" />
+
+</robot>
