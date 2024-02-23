@@ -4,7 +4,6 @@
 # License: Apache License, Version 2.0
 # Author: Thibault Poignonec (tpoignonec@unistra.fr)
 
-import os
 import sys
 
 from acados_solver_plugins import SolverPluginGenerator
@@ -15,8 +14,8 @@ import numpy as np  # noqa: F401
 
 from rrbot_model import RRBotModel
 
-def export_acados_ocp() -> AcadosOcp:
 
+def export_acados_ocp() -> AcadosOcp:
     # setup model
     rrbot_model = RRBotModel()
     model = rrbot_model.export_acados_model()
@@ -51,11 +50,11 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.cost.cost_type_e = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost = \
         err_p.T @ Q_err_p @ err_p \
-            + err_p_dot.T @ Q_err_p_dot @ err_p_dot \
-            model.u.T @ R_mat @ model.u
+        + err_p_dot.T @ Q_err_p_dot @ err_p_dot \
+        + rrbot_model.sym_tau @ R @ rrbot_model.sym_tau
     ocp.model.cost_expr_ext_cost_e = \
         err_p.T @ Q_err_p @ err_p \
-            + err_p_dot.T @ Q_err_p_dot @ err_p_dot
+        + err_p_dot.T @ Q_err_p_dot @ err_p_dot
     # Note: the terminal cost should be chosen more carefully in practice.
     # This is not very rigorous, but enough for the purpose of this example.
 
@@ -90,6 +89,7 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.solver_options.tf = Tf
 
     return ocp
+
 
 def main() -> int:
     # Create ocp
