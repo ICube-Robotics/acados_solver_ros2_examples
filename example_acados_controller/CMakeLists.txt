@@ -63,11 +63,6 @@ install(TARGETS example_acados_controller
   LIBRARY DESTINATION lib
 )
 
-install(
-  DIRECTORY config
-  DESTINATION share/${PROJECT_NAME}
-)
-
 ament_export_targets(export_example_acados_controller HAS_LIBRARY_TARGET)
 ament_export_dependencies(${DEPENDENCIES})
 ament_package()
