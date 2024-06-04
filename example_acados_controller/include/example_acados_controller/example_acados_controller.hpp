@@ -83,8 +83,16 @@ protected:
 
   std::string logger_name_;
 
+  // State
+  Eigen::Vector2d q_pos_;
+  Eigen::Vector2d q_vel_;
+
+  // Reference
   Eigen::Vector2d q_pos_ref_;
   Eigen::Vector2d q_vel_ref_;
+
+  // Control
+  Eigen::Vector2d q_acc_cmd_;
 };
 
 }  // namespace example_acados_controller

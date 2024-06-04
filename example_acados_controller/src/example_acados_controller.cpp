@@ -40,11 +40,9 @@ ExampleAcadosController::ExampleAcadosController()
 CallbackReturn ExampleAcadosController::on_init()
 {
   try {
-    // definition of the parameters that need to be queried from the
-    // controller configuration file with default values
+    // Declare parameters
     auto_declare<std::vector<std::string>>("joints", std::vector<std::string>());
-    auto_declare<double>("KP", double());
-    auto_declare<double>("KD", double());
+
   } catch (const std::exception & e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
@@ -69,23 +67,16 @@ CallbackReturn ExampleAcadosController::on_configure(
     return CallbackReturn::FAILURE;
   }
 
-  if(!(kp_>=0 && kd_>=0)){
-    RCLCPP_ERROR(get_node()->get_logger(), "Bad 'KP' or 'KD' parameter");
-    return CallbackReturn::FAILURE;
-  }
-
   // the desired joint trajectory is queried from the commands topic
   // and passed to update via a rt pipe
   joints_command_subscriber_ = get_node()->create_subscription<CmdType>(
-    "~/commands", rclcpp::SystemDefaultsQoS(),
+    "~/reference", rclcpp::SystemDefaultsQoS(),
     [this](const CmdType::SharedPtr msg) {rt_command_ptr_.writeFromNonRT(msg);});
 
   RCLCPP_INFO(get_node()->get_logger(), "configure successful");
   return CallbackReturn::SUCCESS;
 }
-// As the simulated rrbot hardware interface only supports effort commands, it can be directly
-// defined here without the need of getting as parameter. The effort interface is then
-// affected to all controlled joints.
+
 controller_interface::InterfaceConfiguration
 ExampleAcadosController::command_interface_configuration() const
 {
@@ -93,7 +84,7 @@ ExampleAcadosController::command_interface_configuration() const
   conf.type = controller_interface::interface_configuration_type::INDIVIDUAL;
   conf.names.reserve(joint_names_.size());
   for (const auto & joint_name : joint_names_) {
-    conf.names.push_back(joint_name + "/" + hardware_interface::HW_IF_EFFORT);
+    conf.names.push_back(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION);
   }
   return conf;
 }
@@ -137,15 +128,18 @@ CallbackReturn ExampleAcadosController::on_activate(
   std::vector<std::reference_wrapper<LoanedCommandInterface>> ordered_interfaces;
   if (
     !get_ordered_interfaces(
-      command_interfaces_, joint_names_, hardware_interface::HW_IF_EFFORT, ordered_interfaces) ||
+      command_interfaces_, joint_names_, hardware_interface::HW_IF_ACCELERATION, ordered_interfaces) ||
     command_interfaces_.size() != ordered_interfaces.size())
   {
     RCLCPP_ERROR(
-      get_node()->get_logger(), "Expected %zu effort command interfaces, got %zu",
+      get_node()->get_logger(), "Expected %zu acceleration command interfaces, got %zu",
       joint_names_.size(),
       ordered_interfaces.size());
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
+  
+  // Reset command
+  q_acc_cmd_.setZero();
 
   return CallbackReturn::SUCCESS;
 }
@@ -178,22 +172,20 @@ controller_interface::return_type ExampleAcadosController::update(
   const rclcpp::Time & /*time*/,
   const rclcpp::Duration & /*period*/)
 {
-  // getting the data from the subscriber using the rt pipe
+  // get the data from the subscriber using the rt pipe
   auto reference_joint_trajectory = rt_command_ptr_.readFromRT();
 
-  // getting controller KP and KD coefficients
-  kp_ = get_node()->get_parameter("KP").as_double();
-  kd_ = get_node()->get_parameter("KD").as_double();
+  // retrieve current robot state
+  q_pos_(0) = state_interfaces_[0].get_value();
+  q_vel_(0) = state_interfaces_[1].get_value();
+  q_pos_(1) = state_interfaces_[2].get_value();
+  q_vel_(1) = state_interfaces_[3].get_value();
 
-  // the states are given in the same order as defines in state_interface_configuration
-    q_pos_(0) = state_interfaces_[0].get_value();
-    q_vel_(0) = state_interfaces_[1].get_value();
-    q_pos_(1) = state_interfaces_[2].get_value();
-    q_vel_(1) = state_interfaces_[3].get_value();
-
-  // no command received yet
+  // retrieve reference position and velocity  
   if (!reference_joint_trajectory || !(*reference_joint_trajectory)) {
+    // no command received yet
     q_pos_ref_ = q_pos_;
+    q_vel_ref_.setZero();
   } else {
     //checking proxy data validity
     if (((*reference_joint_trajectory)->joint_names.size() != joint_names_.size()) ||
@@ -208,36 +200,22 @@ controller_interface::return_type ExampleAcadosController::update(
     }
     q_pos_ref_(0) = (*reference_joint_trajectory)->points[0].positions[0];
     q_pos_ref_(1) = (*reference_joint_trajectory)->points[0].positions[1];
-
     q_vel_ref_(0) = (*reference_joint_trajectory)->points[0].velocities[0];
     q_vel_ref_(1) = (*reference_joint_trajectory)->points[0].velocities[1];
-
-    q_acc_ref_(0) = (*reference_joint_trajectory)->points[0].accelerations[0];
-    q_acc_ref_(1) = (*reference_joint_trajectory)->points[0].accelerations[1];
   }
 
-  // ------------------- START TODO -------------------------------------------
+  // Set nmpc initial state and parameters
 
-  u_ = Eigen::Vector2d::Zero();
+  // TODO
 
-  bmat_(0,0) = 0;
-  bmat_(0,1) = 0;
-  bmat_(1,0) = 0;
-  bmat_(1,1) = 0;
+  // Solve NMPC optimization problem
 
-  cvec_(0) = 0;
-  cvec_(1) = 0;
+  // TODO
 
-  gvec_(0) = 0;
-  gvec_(1) = 0;
-
-  tau_ = Eigen::Vector2d::Zero();
-
-  // ------------------- STOP TODO -------------------------------------------
-
-  command_interfaces_[0].set_value(tau_(0));
-  command_interfaces_[1].set_value(tau_(1));
-
+  // Send command to robot
+  command_interfaces_[0].set_value(q_acc_cmd_(0));
+  command_interfaces_[1].set_value(q_acc_cmd_(1));
+  
   return controller_interface::return_type::OK;
 }
 
