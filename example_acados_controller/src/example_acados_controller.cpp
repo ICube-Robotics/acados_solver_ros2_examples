@@ -16,15 +16,16 @@
 
 #include <algorithm>
 #include <cmath>
-#include <string>
 #include <utility>
-#include <vector>
 
 #include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
 
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+
+// Utils for Acados solver plugins (to adjust cost, constraints, etc.)
+#include "acados_solver_base/acados_solver_utils.hpp"
 
 namespace example_acados_controller
 {
@@ -42,6 +43,10 @@ CallbackReturn ExampleAcadosController::on_init()
   try {
     // Declare parameters
     auto_declare<std::vector<std::string>>("joints", std::vector<std::string>());
+
+    auto_declare<std::vector<std::string>>(
+      "nmpc.plugin_name", std::vector<std::string>());
+    auto_declare<int>("nmpc.N", 10);
 
   } catch (const std::exception & e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
@@ -66,6 +71,26 @@ CallbackReturn ExampleAcadosController::on_configure(
     RCLCPP_ERROR(get_node()->get_logger(), "expected exactly 2 joints, got %li", joint_names_.size());
     return CallbackReturn::FAILURE;
   }
+
+  // Initialize NMPC solver  
+  auto N = get_node()->get_parameter("nmpc.N").as_int();
+  auto nmpc_plugin_name = get_node()->get_parameter("nmpc.plugin_name").as_string();
+  
+  RCLCPP_INFO(
+    get_node()->get_logger(), "Loading Acados solver plugin '%s'...",
+    nmpc_plugin_name.c_str()
+  );
+    
+  joint_names_ = get_node()->get_parameter("joints").as_string_array();
+
+  acados_solver_loader_ =
+    std::make_shared<pluginlib::ClassLoader<acados::AcadosSolver>>(
+    "acados_solver_base",
+    "acados::AcadosSolver");
+  acados_solver_ = std::unique_ptr<acados::AcadosSolver>(
+    acados_solver_loader_->createUnmanagedInstance(nmpc_plugin_name));
+  RCLCPP_INFO(
+    get_node()->get_logger(), "Setting up Acados solver with N = %i", N);
 
   // the desired joint trajectory is queried from the commands topic
   // and passed to update via a rt pipe

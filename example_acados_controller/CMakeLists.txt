@@ -23,6 +23,7 @@ set(DEPENDENCIES
   std_msgs
   Eigen3
   tf2_eigen
+  acados_solver_base
 )
 
 foreach(Dependency IN ITEMS ${DEPENDENCIES})

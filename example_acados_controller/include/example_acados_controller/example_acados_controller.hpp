@@ -14,8 +14,8 @@
 //
 // Author: Thibault Poignonec (tpoignonec@unistra.fr)
 
-#ifndef EXAMPLE_CONTROLLER__EXAMPLE_CONTROLLER_HPP_
-#define EXAMPLE_CONTROLLER__EXAMPLE_CONTROLLER_HPP_
+#ifndef EXAMPLE_ACADOS_CONTROLLER__EXAMPLE_ACADOS_CONTROLLER_HPP_
+#define EXAMPLE_ACADOS_CONTROLLER__EXAMPLE_ACADOS_CONTROLLER_HPP_
 
 #include <memory>
 #include <string>
@@ -25,12 +25,17 @@
 #include <Eigen/QR>
 
 #include "controller_interface/controller_interface.hpp"
-#include "example_acados_controller/visibility_control.h"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/realtime_buffer.h"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
+
+#include "example_acados_controller/visibility_control.h"
+
+// Acados
+#include "pluginlib/class_loader.hpp"
+#include "acados_solver_base/acados_solver.hpp"
 
 namespace example_acados_controller
 {
@@ -76,12 +81,17 @@ public:
     const rclcpp::Duration & period) override;
 
 protected:
+  // Basic controller setup
   std::vector<std::string> joint_names_;
-
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
   rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;
-
   std::string logger_name_;
+  
+  /// Acados solver pluginlib loader
+  std::shared_ptr<pluginlib::ClassLoader<acados::AcadosSolver>> acados_solver_loader_;
+
+  /// Acados solver
+  std::unique_ptr<acados::AcadosSolver> acados_solver_;
 
   // State
   Eigen::Vector2d q_pos_;
