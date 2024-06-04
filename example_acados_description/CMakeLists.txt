@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(example_robot_description)
+project(example_acados_description)
 
 find_package(ament_cmake REQUIRED)
 
