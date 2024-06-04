@@ -12,68 +12,62 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(controller_interface REQUIRED)
-find_package(hardware_interface REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(realtime_tools REQUIRED)
-find_package(std_msgs REQUIRED)
 
-add_library(example_acados_controller
-  SHARED
-  src/example_acados_controller.cpp
-)
-target_include_directories(rrbot_pdg_controller PRIVATE include)
-ament_target_dependencies(rrbot_pdg_controller
+set(DEPENDENCIES
   builtin_interfaces
   controller_interface
   hardware_interface
   pluginlib
   rclcpp_lifecycle
-  rcutils
   realtime_tools
   std_msgs
+  Eigen3
+  tf2_eigen
 )
+
+foreach(Dependency IN ITEMS ${DEPENDENCIES})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+# add controller library
+add_library(example_acados_controller
+  SHARED
+  src/example_acados_controller.cpp
+)
+target_include_directories(example_acados_controller PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/example_acados_controller>
+)
+ament_target_dependencies(
+  example_acados_controller
+  PUBLIC ${DEPENDENCIES}
+)
+
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
-target_compile_definitions(rrbot_pdg_controller PRIVATE "rrbot_pdg_controller_BUILDING_DLL")
+target_compile_definitions(example_acados_controller PRIVATE "example_acados_controller_BUILDING_DLL")
 # prevent pluginlib from using boost
-target_compile_definitions(rrbot_pdg_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+target_compile_definitions(example_acados_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 pluginlib_export_plugin_description_file(controller_interface controller_plugin.xml)
 
+# install
 install(
   DIRECTORY include/
-  DESTINATION include
+  DESTINATION include/example_acados_controller
 )
 
-install(
-  TARGETS
-  rrbot_pdg_controller
+install(TARGETS example_acados_controller
+  EXPORT export_example_acados_controller
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
 )
 
-ament_export_dependencies(
-  controller_interface
-  hardware_interface
-  rclcpp
-  rclcpp_lifecycle
-  realtime_tools
-  std_msgs
-)
-ament_export_include_directories(
-  include
-)
-ament_export_libraries(
-  rrbot_pdg_controller
+install(
+  DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
 )
 
-if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-endif()
-
+ament_export_targets(export_example_acados_controller HAS_LIBRARY_TARGET)
+ament_export_dependencies(${DEPENDENCIES})
 ament_package()

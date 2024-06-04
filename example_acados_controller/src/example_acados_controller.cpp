@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "example_acados_controller/example_controller.hpp"
+#include "example_acados_controller/example_acados_controller.hpp"
 
 #include <algorithm>
 #include <cmath>

@@ -78,9 +78,8 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.constraints.ubx_e = ocp.constraints.ubx
     ocp.constraints.idxbx_e = ocp.constraints.idxbx
 
-    # set options
+    # set solver options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.solver_options.qp_solver_cond_N = int(N/4)
