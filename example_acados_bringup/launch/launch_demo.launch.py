@@ -87,6 +87,15 @@ def generate_launch_description():
         ],
     )
 
+    nmpc_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "nmpc_controller",
+            "--controller-manager", "/controller_manager"
+        ],
+    )
+
     # Launch dummy reference
     # ---------------------------------------
 
@@ -100,7 +109,7 @@ def generate_launch_description():
         robot_state_pub_node,
         rviz_node,
         joint_state_broadcaster_spawner,
-        # robot_controller_spawner,
+        nmpc_controller_spawner,
     ]
 
     return LaunchDescription(

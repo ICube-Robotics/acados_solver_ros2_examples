@@ -15,8 +15,9 @@ nmpc_controller:
       - joint2
 
     nmpc:
-      plugin_name: example_acados_controller/ExampleAcadosController
+      plugin_name: acados_solver_plugins/RrbotCartesianTracking
       N : 10
+      Ts: 0.005  # 1 / update_rate
       Q_pos_diag : [100., 100.]
       Q_vel_diag : [20., 20.]
       R_diag : [1., 1.]
