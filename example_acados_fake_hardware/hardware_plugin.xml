@@ -1,0 +1,9 @@
+<library path="example_acados_fake_hardware">
+  <class name="example_acados_fake_hardware/RRbot"
+         type="example_acados_fake_hardware::RRbot"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Hardware Interface of a dynamically simulated RRbot.
+    </description>
+  </class>
+</library>
