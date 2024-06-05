@@ -1,11 +1,15 @@
-# import numpy as np
-# import os
+# Copyright 2024 ICUBE Laboratory, University of Strasbourg
+# License: Apache License, Version 2.0
 
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, DeclareLaunchArgument
-from launch.conditions import LaunchConfigurationEquals, IfCondition
-from launch.substitutions import LaunchConfiguration
+from launch.actions import DeclareLaunchArgument  # noqa: F401
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    PathJoinSubstitution
+)
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
@@ -15,38 +19,90 @@ def generate_launch_description():
     declared_arguments = []
 
     # ========================================
+    # Get config files
+    # ========================================
+    robot_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("example_acados_description"),
+                    "urdf",
+                    "rrbot.urdf.xacro",
+                ]
+            ),
+        ]
+    )
+    robot_description = {"robot_description": robot_description_content}
+
+    config_controllers = PathJoinSubstitution(
+        [
+            FindPackageShare("example_acados_bringup"),
+            "config",
+            "controllers.yaml",
+        ]
+    )
+    rviz_config_file = PathJoinSubstitution(
+        [FindPackageShare("example_acados_description"), "rviz", "rrbot.rviz"]
+    )
+
+    # ========================================
     # Launch nodes
     # ========================================
-    nodes = []
 
-    # Launch controller manager
+    # Launch nodes
     # ---------------------------------------
-    nodes += Node(
-        package='vic_ppf_python',
-        executable='bednarczyk_node',
-        name='SIPF_W2_node',
-        remappings=[],
-        parameters=[
-            global_setting,
-            {
-                'passivation_function': 'bednarczyk_W2'
-            },
-        ],
-    ),
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_description, config_controllers],
+        output="both",
+    )
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        output="log",
+        arguments=["-d", rviz_config_file],
+    )
+
+    robot_state_pub_node = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[robot_description],
+    )
 
     # Load controllers
     # ---------------------------------------
-    
-    # TODO
+
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager", "/controller_manager"
+        ],
+    )
 
     # Launch dummy reference
     # ---------------------------------------
-    
+
     # TODO
 
     # ========================================
     # Return launch description
     # ========================================
+    nodes = [
+        control_node,
+        robot_state_pub_node,
+        rviz_node,
+        joint_state_broadcaster_spawner,
+        # robot_controller_spawner,
+    ]
+
     return LaunchDescription(
         declared_arguments
         + nodes

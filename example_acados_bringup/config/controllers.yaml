@@ -7,3 +7,16 @@ controller_manager:
 
     nmpc_controller:
       type: example_acados_controller/ExampleAcadosController
+
+nmpc_controller:
+  ros__parameters:
+    joints:
+      - joint1
+      - joint2
+
+    nmpc:
+      plugin_name: example_acados_controller/ExampleAcadosController
+      N : 10
+      Q_pos_diag : [100., 100.]
+      Q_vel_diag : [20., 20.]
+      R_diag : [1., 1.]
