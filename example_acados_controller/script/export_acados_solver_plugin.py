@@ -63,7 +63,7 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.model.cost_expr_ext_cost = \
         err_p.T @ Q_err_p @ err_p \
         + err_p_dot.T @ Q_err_p_dot @ err_p_dot \
-        + rrbot_model.sym_tau @ R @ rrbot_model.sym_tau
+        + rrbot_model.sym_tau.T @ R @ rrbot_model.sym_tau
     ocp.model.cost_expr_ext_cost_e = \
         err_p.T @ Q_err_p @ err_p \
         + err_p_dot.T @ Q_err_p_dot @ err_p_dot
@@ -75,29 +75,32 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.constraints.x0 = x0  # placeholder initial state
 
     tau_max = 2.0
-    ocp.constraints.lbu = np.array([-tau_max]*2)
-    ocp.constraints.ubu = np.array([+tau_max]*2)
-    ocp.constraints.idxbu = np.array([0, 1])
+    # ocp.constraints.lbu = np.array([-tau_max]*2)
+    # ocp.constraints.ubu = np.array([+tau_max]*2)
+    # ocp.constraints.idxbu = np.array([0, 1])
 
-    q_min = - np.pi / 2
-    q_max = + np.pi
     q_dot_max = np.pi  # rad/s
+    q_1_bounds = (- 2 * np.pi, 0.0)
+    q_2_bounds = (-np.pi, np.pi)
 
-    ocp.constraints.lbx = np.array([q_min, q_min, -q_dot_max, -q_dot_max])
-    ocp.constraints.ubx = np.array([q_max, q_max, q_dot_max, q_dot_max])
+    ocp.constraints.lbx = np.array(
+        [q_1_bounds[0], q_2_bounds[0], -q_dot_max, -q_dot_max])
+    ocp.constraints.ubx = np.array(
+        [q_1_bounds[1], q_2_bounds[1], +q_dot_max, +q_dot_max])
     ocp.constraints.idxbx = np.array(range(model.x.shape[0]))
+
     ocp.constraints.lbx_e = ocp.constraints.lbx
     ocp.constraints.ubx_e = ocp.constraints.ubx
     ocp.constraints.idxbx_e = ocp.constraints.idxbx
 
     # set solver options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.integrator_type = 'IRK'
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI'
-    ocp.solver_options.qp_solver_cond_N = int(N/4)
-
-    # set prediction horizon
     ocp.solver_options.tf = Tf
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver_cond_N = int(N/4)
+    ocp.solver_options.qp_solver_iter_max = 50
+    ocp.solver_options.hessian_approx = 'EXACT'
+    ocp.solver_options.integrator_type = 'IRK'
 
     return ocp
 
@@ -111,10 +114,7 @@ def main() -> int:
         'q': [0, 1],
         'q_dot': [2, 3],
     }
-    z_index_map = {
-        'p': [0, 1],
-        'p_dot': [2, 3],
-    }
+    z_index_map = {}
     p_index_map = {
         'p_ref': [0, 1],
         'p_dot_ref': [2, 3],

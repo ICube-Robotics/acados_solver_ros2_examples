@@ -42,11 +42,11 @@ CallbackReturn ExampleAcadosController::on_init()
 {
   try {
     // Declare parameters
+    // this->declare_parameter("update_rate");
     auto_declare<std::vector<std::string>>("joints", std::vector<std::string>());
-
-    auto_declare<std::vector<std::string>>(
-      "nmpc.plugin_name", std::vector<std::string>());
+    auto_declare<std::string>("nmpc.plugin_name", std::string());
     auto_declare<int>("nmpc.N", 10);
+    auto_declare<double>("nmpc.Ts", -1);
   } catch (const std::exception & e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
@@ -58,9 +58,13 @@ CallbackReturn ExampleAcadosController::on_init()
 CallbackReturn ExampleAcadosController::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // getting the names of the joints to be controlled
+  // get parameters
   joint_names_ = get_node()->get_parameter("joints").as_string_array();
+  auto nmpc_plugin_name = get_node()->get_parameter("nmpc.plugin_name").as_string();
+  auto N = get_node()->get_parameter("nmpc.N").as_int();
+  auto Ts = get_node()->get_parameter("nmpc.Ts").as_double();
 
+  // Check parameters
   if (joint_names_.empty()) {
     RCLCPP_ERROR(get_node()->get_logger(), "'joints' parameter was empty");
     return CallbackReturn::FAILURE;
@@ -73,25 +77,43 @@ CallbackReturn ExampleAcadosController::on_configure(
     return CallbackReturn::FAILURE;
   }
 
-  // Initialize NMPC solver
-  auto N = get_node()->get_parameter("nmpc.N").as_int();
-  auto nmpc_plugin_name = get_node()->get_parameter("nmpc.plugin_name").as_string();
+  if (Ts <= 0) {
+    RCLCPP_ERROR(get_node()->get_logger(), "'nmpc.Ts' parameter must be positive");
+    return CallbackReturn::FAILURE;
+  }
+  if (N <= 0) {
+    RCLCPP_ERROR(get_node()->get_logger(), "'nmpc.N' parameter must be positive");
+    return CallbackReturn::FAILURE;
+  }
+  if (nmpc_plugin_name.empty()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "'nmpc_plugin_name' parameter was empty");
+    return CallbackReturn::FAILURE;
+  }
 
+  // Initialize NMPC solver
   RCLCPP_INFO(
     get_node()->get_logger(), "Loading Acados solver plugin '%s'...",
     nmpc_plugin_name.c_str()
   );
 
-  joint_names_ = get_node()->get_parameter("joints").as_string_array();
-
   acados_solver_loader_ =
     std::make_shared<pluginlib::ClassLoader<acados::AcadosSolver>>(
-    "acados_solver_base",
-    "acados::AcadosSolver");
+    "acados_solver_base", "acados::AcadosSolver");
   acados_solver_ = std::unique_ptr<acados::AcadosSolver>(
     acados_solver_loader_->createUnmanagedInstance(nmpc_plugin_name));
+
   RCLCPP_INFO(
-    get_node()->get_logger(), "Setting up Acados solver with N = %i", N);
+    get_node()->get_logger(),
+    "Initializing Acados solver with N = %li and Ts = %f", N, Ts);
+
+  if (0 != acados_solver_->init(N, Ts)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to configure the Acados solver!");
+    return CallbackReturn::FAILURE;
+  }
+  if (0 != acados_solver_->reset()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to reset the Acados solver!");
+    return CallbackReturn::FAILURE;
+  }
 
   // the desired joint trajectory is queried from the commands topic
   // and passed to update via a rt pipe
@@ -164,8 +186,16 @@ CallbackReturn ExampleAcadosController::on_activate(
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
 
+  // Reset the NMPC solver
+  if (0 != acados_solver_->reset()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to reset the Acados solver!");
+    return CallbackReturn::ERROR;
+  }
+
   // Reset command
   tau_cmd_.setZero();
+  is_first_itr_ = true;
+
 
   return CallbackReturn::SUCCESS;
 }
@@ -207,11 +237,21 @@ controller_interface::return_type ExampleAcadosController::update(
   q_pos_(1) = state_interfaces_[2].get_value();
   q_vel_(1) = state_interfaces_[3].get_value();
 
+  if (is_first_itr_) {
+    // Initialize reference position and velocity
+    // Note: this is just an example, the actual values should be set based on the application
+    // requirements. Also, in practice, use the URDF to retrieve a forward kinematics model...
+    double l1 = 1.0;
+    double l2 = 1.0;
+    p_ref_(0) = l1 * cos(q_pos_(0)) + l2 * cos(q_pos_(0) + q_pos_(1));
+    p_ref_(1) = l1 * sin(q_pos_(0)) + l2 * sin(q_pos_(0) + q_pos_(1));
+    p_dot_ref_.setZero();
+  }
+
   // retrieve reference position and velocity
   if (!reference_joint_trajectory || !(*reference_joint_trajectory)) {
-    // no command received yet
-    q_pos_ref_ = q_pos_;
-    q_vel_ref_.setZero();
+    // no command received yet, use last position values and set velocitty ref to zero
+    p_dot_ref_.setZero();
   } else {
     // checking proxy data validity
     if (((*reference_joint_trajectory)->joint_names.size() != joint_names_.size()) ||
@@ -224,23 +264,82 @@ controller_interface::return_type ExampleAcadosController::update(
         *get_node()->get_clock(), 1000, "command size does not match number of interfaces");
       return controller_interface::return_type::ERROR;
     }
-    q_pos_ref_(0) = (*reference_joint_trajectory)->points[0].positions[0];
-    q_pos_ref_(1) = (*reference_joint_trajectory)->points[0].positions[1];
-    q_vel_ref_(0) = (*reference_joint_trajectory)->points[0].velocities[0];
-    q_vel_ref_(1) = (*reference_joint_trajectory)->points[0].velocities[1];
+    p_ref_(0) = (*reference_joint_trajectory)->points[0].positions[0];
+    p_ref_(1) = (*reference_joint_trajectory)->points[0].positions[1];
+    p_dot_ref_(0) = (*reference_joint_trajectory)->points[0].velocities[0];
+    p_dot_ref_(1) = (*reference_joint_trajectory)->points[0].velocities[1];
   }
 
-  // Set nmpc initial state and parameters
+  // Set nmpc initial state
+  acados::ValueMap x_values_map;
+  x_values_map["q"] = std::vector(&q_pos_[0], q_pos_.data() + q_pos_.size());
+  x_values_map["q_dot"] = std::vector(&q_vel_[0], q_vel_.data() + q_vel_.size());
 
-  // TODO(tpoignonec)
+  bool all_ok = true;
+  if (is_first_itr_) {  // this is the first iteration
+    // Set initial state values for all stages of the NMPC problem
+    all_ok &= (0 == acados_solver_->initialize_state_values(x_values_map));
+  }
+  // Set initial state values for the first stage of the NMPC problem
+  all_ok &= (0 == acados_solver_->set_initial_state_values(x_values_map));
+
+  if (!all_ok) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set NMPC initial state values!");
+    return controller_interface::return_type::ERROR;
+  }
+
+  // Set nmpc runtime parameters
+  std::vector<double> Q_pos_diag = get_node()->get_parameter("nmpc.Q_pos_diag").as_double_array();
+  std::vector<double> Q_vel_diag = get_node()->get_parameter("nmpc.Q_vel_diag").as_double_array();
+  std::vector<double> R_diag = get_node()->get_parameter("nmpc.R_diag").as_double_array();
+
+  acados::ValueMap p_values_map;
+  p_values_map["p_ref"] = std::vector(&p_ref_[0], p_ref_.data() + p_ref_.size());
+  p_values_map["p_dot_ref"] = std::vector(&p_dot_ref_[0], p_dot_ref_.data() + p_dot_ref_.size());
+  p_values_map["Q_pos_diag"] = Q_pos_diag;
+  p_values_map["Q_vel_diag"] = Q_vel_diag;
+  p_values_map["R_diag"] = R_diag;
+
+  // std::cout << "q_pos: " << q_pos_[0] << ", " << q_pos_[1] << std::endl;
+  // std::cout << "q_vel: " << q_vel_[0] << ", " << q_vel_[1] << std::endl;
+  // std::cout << "p_ref: " << p_ref_[0] << ", " << p_ref_[1] << std::endl;
+  // std::cout << "p_dot_ref: " << p_dot_ref_[0] << ", " << p_dot_ref_[1] << std::endl;
+  // std::cout << "Q_pos_diag: " << Q_pos_diag[0] << ", " << Q_pos_diag[1] << std::endl;
+  // std::cout << "Q_vel_diag: " << Q_vel_diag[0] << ", " << Q_vel_diag[1] << std::endl;
+  // std::cout << "R_diag: " << R_diag[0] << ", " << R_diag[1] << std::endl;
+
+  if (0 != acados_solver_->set_runtime_parameters(p_values_map)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set NMPC runtime parameters!");
+    return controller_interface::return_type::ERROR;
+  }
 
   // Solve NMPC optimization problem
+  if (0 != acados_solver_->solve()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to solve the NMPC SQP problem!");
+    all_ok = false;
+  } else {
+    // Get optimal control input
+    acados::ValueMap u_values_map = acados_solver_->get_control_values_as_map(0);
+    tau_cmd_(0) = u_values_map["tau"][0];
+    tau_cmd_(1) = u_values_map["tau"][1];
+  }
 
-  // TODO(tpoignonec)
+  if (!all_ok) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Error during update()! Setting controls to zero.");
+    tau_cmd_.setZero();
+    command_interfaces_[0].set_value(0.0);
+    command_interfaces_[1].set_value(0.0);
+    return controller_interface::return_type::ERROR;
+  }
 
   // Send command to robot
   command_interfaces_[0].set_value(tau_cmd_(0));
   command_interfaces_[1].set_value(tau_cmd_(1));
+
+  // Update the first iteration flag if needed
+  if (is_first_itr_) {
+    is_first_itr_ = false;
+  }
 
   return controller_interface::return_type::OK;
 }

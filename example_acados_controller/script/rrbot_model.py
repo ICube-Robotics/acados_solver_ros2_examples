@@ -36,11 +36,11 @@ class RRBotModel:
 
         # Casadi symbols
         # --------------
-        self.sym_q = SX.sym('q', 2)          # Joint position
-        self.sym_q_dot = SX.sym('q_dot', 2)  # Joint velocity
-        self.sym_tau = SX.sym('tau', 2)      # Joint torques  (controls)
-        self.sym_p = SX.sym('p', 2)          # Cart. position
-        self.sym_p_dot = SX.sym('p_dot', 2)  # Cart. velocity
+        self.sym_q = SX.sym('q', 2, 1)          # Joint position
+        self.sym_q_dot = SX.sym('q_dot', 2, 1)  # Joint velocity
+        self.sym_tau = SX.sym('tau', 2, 1)      # Joint torques  (controls)
+        # self.sym_p = SX.sym('p', 2, 1)          # Cart. position
+        # self.sym_p_dot = SX.sym('p_dot', 2, 1)  # Cart. velocity
 
         # Expressions
         # ------------
@@ -75,19 +75,20 @@ class RRBotModel:
             self.sym_q[0] + self.sym_q[1]) * self.gravity
 
         # Forward dynamics: q_dot2 = f_dyn(q, q_dot, tau)
-        self.expr_forward_dynamics = vertcat(
-            B.inverse() * (self.sym_tau - C_times_q_dot - G)
-        )
+        self.expr_forward_dynamics = \
+            ca.inv(B) @ (self.sym_tau - C_times_q_dot - G)
 
-        # Forward kinematics: p = fk(q)
+        # Forward kinematics: p = fk(q) and p_dot = J(q) * q_dot
         self.expr_fk = vertcat(
             self.l1 * cos(self.sym_q[0])
             + self.l2 * cos(self.sym_q[0] + self.sym_q[1]),
             self.l1 * sin(self.sym_q[0])
             + self.l2 * sin(self.sym_q[0] + self.sym_q[1])
         )
-        # Diff. kinematics
         self.expr_J = ca.jacobian(self.expr_fk, self.sym_q)  # Auto. diff
+
+        self.sym_p = self.expr_fk
+        self.sym_p_dot = self.expr_J @ self.sym_q_dot
 
         # Store joint inertia
         self.joint_inertia_matrix = B
@@ -99,7 +100,7 @@ class RRBotModel:
         u = vertcat(self.sym_tau)
 
         # algebraic state variables
-        z = vertcat(self.sym_p, self.sym_p_dot)
+        z = vertcat([])
 
         # dynamics (ODE) of the form: x_dot = ODE(x, u)
         function_ODE = vertcat(
@@ -109,9 +110,7 @@ class RRBotModel:
 
         # full DAE model (i.e., implicit)
         f_impl = vertcat(
-            xdot - function_ODE,
-            self.sym_p - self.expr_fk,
-            self.sym_p_dot - self.expr_J @ self.sym_q_dot
+            xdot - function_ODE
         )
 
         # Instantiate Acados model object and return

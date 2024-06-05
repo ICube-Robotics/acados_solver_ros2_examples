@@ -92,16 +92,17 @@ protected:
 
   /// Acados solver
   std::unique_ptr<acados::AcadosSolver> acados_solver_;
+  bool is_first_itr_;
 
-  // State
+  // Joint state
   Eigen::Vector2d q_pos_;
   Eigen::Vector2d q_vel_;
 
-  // Reference
-  Eigen::Vector2d q_pos_ref_;
-  Eigen::Vector2d q_vel_ref_;
+  // Cartesian reference
+  Eigen::Vector2d p_ref_;
+  Eigen::Vector2d p_dot_ref_;
 
-  // Control
+  // Controls
   Eigen::Vector2d tau_cmd_;
 };
 
