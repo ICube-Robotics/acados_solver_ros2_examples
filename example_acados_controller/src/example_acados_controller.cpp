@@ -47,7 +47,6 @@ CallbackReturn ExampleAcadosController::on_init()
     auto_declare<std::vector<std::string>>(
       "nmpc.plugin_name", std::vector<std::string>());
     auto_declare<int>("nmpc.N", 10);
-
   } catch (const std::exception & e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
@@ -68,19 +67,21 @@ CallbackReturn ExampleAcadosController::on_configure(
   }
 
   if (joint_names_.size() != 2) {
-    RCLCPP_ERROR(get_node()->get_logger(), "expected exactly 2 joints, got %li", joint_names_.size());
+    RCLCPP_ERROR(
+      get_node()->get_logger(), "expected exactly 2 joints, got %li",
+      joint_names_.size());
     return CallbackReturn::FAILURE;
   }
 
-  // Initialize NMPC solver  
+  // Initialize NMPC solver
   auto N = get_node()->get_parameter("nmpc.N").as_int();
   auto nmpc_plugin_name = get_node()->get_parameter("nmpc.plugin_name").as_string();
-  
+
   RCLCPP_INFO(
     get_node()->get_logger(), "Loading Acados solver plugin '%s'...",
     nmpc_plugin_name.c_str()
   );
-    
+
   joint_names_ = get_node()->get_parameter("joints").as_string_array();
 
   acados_solver_loader_ =
@@ -109,7 +110,7 @@ ExampleAcadosController::command_interface_configuration() const
   conf.type = controller_interface::interface_configuration_type::INDIVIDUAL;
   conf.names.reserve(joint_names_.size());
   for (const auto & joint_name : joint_names_) {
-    conf.names.push_back(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION);
+    conf.names.push_back(joint_name + "/" + hardware_interface::HW_IF_EFFORT);
   }
   return conf;
 }
@@ -153,7 +154,7 @@ CallbackReturn ExampleAcadosController::on_activate(
   std::vector<std::reference_wrapper<LoanedCommandInterface>> ordered_interfaces;
   if (
     !get_ordered_interfaces(
-      command_interfaces_, joint_names_, hardware_interface::HW_IF_ACCELERATION, ordered_interfaces) ||
+      command_interfaces_, joint_names_, hardware_interface::HW_IF_EFFORT, ordered_interfaces) ||
     command_interfaces_.size() != ordered_interfaces.size())
   {
     RCLCPP_ERROR(
@@ -162,9 +163,9 @@ CallbackReturn ExampleAcadosController::on_activate(
       ordered_interfaces.size());
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
-  
+
   // Reset command
-  q_acc_cmd_.setZero();
+  tau_cmd_.setZero();
 
   return CallbackReturn::SUCCESS;
 }
@@ -206,22 +207,22 @@ controller_interface::return_type ExampleAcadosController::update(
   q_pos_(1) = state_interfaces_[2].get_value();
   q_vel_(1) = state_interfaces_[3].get_value();
 
-  // retrieve reference position and velocity  
+  // retrieve reference position and velocity
   if (!reference_joint_trajectory || !(*reference_joint_trajectory)) {
     // no command received yet
     q_pos_ref_ = q_pos_;
     q_vel_ref_.setZero();
   } else {
-    //checking proxy data validity
+    // checking proxy data validity
     if (((*reference_joint_trajectory)->joint_names.size() != joint_names_.size()) ||
-        ((*reference_joint_trajectory)->points[0].positions.size() != joint_names_.size()) ||
-        ((*reference_joint_trajectory)->points[0].velocities.size() != joint_names_.size()) ||
-        ((*reference_joint_trajectory)->points[0].accelerations.size() != joint_names_.size())
-      ){
-        RCLCPP_ERROR_THROTTLE(
+      ((*reference_joint_trajectory)->points[0].positions.size() != joint_names_.size()) ||
+      ((*reference_joint_trajectory)->points[0].velocities.size() != joint_names_.size()) ||
+      ((*reference_joint_trajectory)->points[0].accelerations.size() != joint_names_.size()))
+    {
+      RCLCPP_ERROR_THROTTLE(
         get_node()->get_logger(),
         *get_node()->get_clock(), 1000, "command size does not match number of interfaces");
-        return controller_interface::return_type::ERROR;
+      return controller_interface::return_type::ERROR;
     }
     q_pos_ref_(0) = (*reference_joint_trajectory)->points[0].positions[0];
     q_pos_ref_(1) = (*reference_joint_trajectory)->points[0].positions[1];
@@ -231,16 +232,16 @@ controller_interface::return_type ExampleAcadosController::update(
 
   // Set nmpc initial state and parameters
 
-  // TODO
+  // TODO(tpoignonec)
 
   // Solve NMPC optimization problem
 
-  // TODO
+  // TODO(tpoignonec)
 
   // Send command to robot
-  command_interfaces_[0].set_value(q_acc_cmd_(0));
-  command_interfaces_[1].set_value(q_acc_cmd_(1));
-  
+  command_interfaces_[0].set_value(tau_cmd_(0));
+  command_interfaces_[1].set_value(tau_cmd_(1));
+
   return controller_interface::return_type::OK;
 }
 

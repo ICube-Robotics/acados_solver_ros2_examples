@@ -17,12 +17,12 @@
 #ifndef EXAMPLE_ACADOS_CONTROLLER__EXAMPLE_ACADOS_CONTROLLER_HPP_
 #define EXAMPLE_ACADOS_CONTROLLER__EXAMPLE_ACADOS_CONTROLLER_HPP_
 
+#include <Eigen/Dense>
+#include <Eigen/QR>
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <Eigen/Dense>
-#include <Eigen/QR>
 
 #include "controller_interface/controller_interface.hpp"
 #include "rclcpp/subscription.hpp"
@@ -67,13 +67,13 @@ public:
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
 
   EXAMPLE_ACADOS_CONTROLLER_PUBLIC
-  CallbackReturn on_cleanup(const rclcpp_lifecycle::State &previous_state) override;
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
   EXAMPLE_ACADOS_CONTROLLER_PUBLIC
-  CallbackReturn on_error(const rclcpp_lifecycle::State &previous_state) override;
+  CallbackReturn on_error(const rclcpp_lifecycle::State & previous_state) override;
 
   EXAMPLE_ACADOS_CONTROLLER_PUBLIC
-  CallbackReturn on_shutdown(const rclcpp_lifecycle::State &previous_state) override;
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
 
   EXAMPLE_ACADOS_CONTROLLER_PUBLIC
   controller_interface::return_type update(
@@ -86,7 +86,7 @@ protected:
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
   rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;
   std::string logger_name_;
-  
+
   /// Acados solver pluginlib loader
   std::shared_ptr<pluginlib::ClassLoader<acados::AcadosSolver>> acados_solver_loader_;
 
@@ -102,9 +102,9 @@ protected:
   Eigen::Vector2d q_vel_ref_;
 
   // Control
-  Eigen::Vector2d q_acc_cmd_;
+  Eigen::Vector2d tau_cmd_;
 };
 
 }  // namespace example_acados_controller
 
-#endif  // EXAMPLE_ACADOS_CONTROLLER
+#endif  // EXAMPLE_ACADOS_CONTROLLER__EXAMPLE_ACADOS_CONTROLLER_HPP_

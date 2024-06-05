@@ -20,10 +20,22 @@ def export_acados_ocp() -> AcadosOcp:
     rrbot_model = RRBotModel()
     model = rrbot_model.export_acados_model()
 
-    # add extra model parameters
+    # add extra parameters
     sym_p_ref = ca.SX.sym('p_ref', 2)
     sym_p_dot_ref = ca.SX.sym('p_dot_ref', 2)
-    model.p = ca.vertcat(model.p, sym_p_ref, sym_p_dot_ref)
+
+    sym_Q_pos_diag = ca.SX.sym('Q_pos_diag', 2)
+    sym_Q_vel_diag = ca.SX.sym('Q_vel_diag', 2)
+    sym_R_diag = ca.SX.sym('R_diag', 2)
+
+    model.p = ca.vertcat(
+        model.p,  # original model parameters (empty here)
+        sym_p_ref,
+        sym_p_dot_ref,
+        sym_Q_pos_diag,
+        sym_Q_vel_diag,
+        sym_R_diag,
+    )
 
     # setup OCP
     ocp = AcadosOcp()
@@ -39,9 +51,9 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.parameter_values = np.zeros((model.p.shape[0],))
 
     # set cost
-    Q_err_p = 100 * np.eye(2)
-    Q_err_p_dot = 10 * np.eye(2)
-    R = 1 * np.eye(2)
+    Q_err_p = ca.diag(sym_Q_pos_diag)
+    Q_err_p_dot = ca.diag(sym_Q_vel_diag)
+    R = ca.diag(sym_R_diag)
 
     err_p = sym_p_ref - rrbot_model.sym_p
     err_p_dot = sym_p_ref - rrbot_model.sym_p_dot
@@ -106,6 +118,9 @@ def main() -> int:
     p_index_map = {
         'p_ref': [0, 1],
         'p_dot_ref': [2, 3],
+        'Q_pos_diag': [4, 5],
+        'Q_vel_diag': [6, 7],
+        'R_diag': [8, 9],
     }
     u_index_map = {
         'tau': [0, 1],
