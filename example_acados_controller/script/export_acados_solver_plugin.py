@@ -28,12 +28,12 @@ def export_acados_ocp() -> AcadosOcp:
     sym_R_diag = ca.SX.sym('R_diag', 2)
 
     model.p = ca.vertcat(
-        model.p,        # original model parameters (see rrbot_model.py)
-        sym_p_ref,      # reference position
-        sym_p_dot_ref,  # reference velocity
-        sym_Q_pos_diag, # weight for position error
-        sym_Q_vel_diag, # weight for velocity error
-        sym_R_diag,     # weight for control (torques)
+        model.p,         # original model parameters (see rrbot_model.py)
+        sym_p_ref,       # reference position
+        sym_p_dot_ref,   # reference velocity
+        sym_Q_pos_diag,  # weight for position error
+        sym_Q_vel_diag,  # weight for velocity error
+        sym_R_diag,      # weight for control (torques)
     )
 
     # setup OCP
@@ -102,6 +102,8 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = int(N/4)
+    ocp.solver_options.hpipm_mode = 'BALANCE'  # 'SPEED'  # 'ROBUST'
+    ocp.solver_options.qp_solver_warm_start = 2  # 0 = None, 1 = warm, 2 =hot
     ocp.solver_options.qp_solver_iter_max = 50
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'IRK'

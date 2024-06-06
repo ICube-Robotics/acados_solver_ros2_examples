@@ -11,7 +11,9 @@ import numpy as np
 
 from std_msgs.msg import Float64MultiArray
 
-from interactive_markers.interactive_marker_server import InteractiveMarkerServer
+from interactive_markers.interactive_marker_server import (
+    InteractiveMarkerServer
+)
 from visualization_msgs.msg import (
     InteractiveMarker,
     InteractiveMarkerControl,
@@ -24,17 +26,18 @@ class InteractiveCartesianReference(Node):
     def __init__(self):
         super().__init__('interactive_cartesian_reference_node')
 
+        self.origin_pendulum = np.array([0., -0.2, 2.])
+        self.marker_position = self.origin_pendulum + np.array([0., 0., -2.])
+
         self.publisher_ = self.create_publisher(
             Float64MultiArray,
             '/cartesian_reference',
             5
         )
 
-        # create an interactive marker server on the topic namespace simple_marker
-        self.marker_server = InteractiveMarkerServer(self, 'interactive_markers')
-
-        self.origin_pendulum = np.array([0.0, -0.2, 2.0])
-        self.marker_position = self.origin_pendulum + np.array([0.0, 0.0, -2.0])
+        # create an interactive marker server
+        self.marker_server = \
+            InteractiveMarkerServer(self, 'interactive_markers')
 
         # create an interactive marker for our server
         int_marker = InteractiveMarker()
@@ -76,7 +79,8 @@ class InteractiveCartesianReference(Node):
         add_control(0.0, 1.0, 0.0)
 
         self.marker_server.insert(int_marker)
-        self.marker_server.setCallback(int_marker.name, self.process_marker_feedback)
+        self.marker_server.setCallback(
+            int_marker.name, self.process_marker_feedback)
 
         # 'commit' changes and send to all clients
         self.marker_server.applyChanges()
@@ -85,9 +89,16 @@ class InteractiveCartesianReference(Node):
 
     def update(self):
         msg = Float64MultiArray()
-        ref_wrt_world = np.array([self.marker_position[0], self.marker_position[1], self.marker_position[2]])
+        ref_wrt_world = np.array([
+            self.marker_position[0],
+            self.marker_position[1],
+            self.marker_position[2]
+        ])
         ref_wrt_pendulum_origin = ref_wrt_world - self.origin_pendulum
-        msg.data = [ref_wrt_pendulum_origin[0], ref_wrt_pendulum_origin[2], 0.0, 0.0]
+        msg.data = [
+            ref_wrt_pendulum_origin[0], ref_wrt_pendulum_origin[2],
+            0.0, 0.0  # no velocity for now
+        ]
         self.publisher_.publish(msg)
 
     def process_marker_feedback(self, feedback):

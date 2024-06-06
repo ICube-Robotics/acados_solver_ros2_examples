@@ -228,6 +228,12 @@ controller_interface::return_type ExampleAcadosController::update(
   const rclcpp::Time & /*time*/,
   const rclcpp::Duration & /*period*/)
 {
+  // Robot parameters
+  double l1 = 1.0;
+  double l2 = 1.0;
+  double m1 = 1.0;
+  double m2 = 1.0;
+
   // get the data from the subscriber using the rt pipe
   auto reference_cartesian_pose = rt_command_ptr_.readFromRT();
 
@@ -241,8 +247,6 @@ controller_interface::return_type ExampleAcadosController::update(
     // Initialize reference position and velocity
     // Note: this is just an example, the actual values should be set based on the application
     // requirements. Also, in practice, use the URDF to retrieve a forward kinematics model...
-    double l1 = 1.0;
-    double l2 = 1.0;
     p_ref_(0) = l1 * cos(q_pos_(0)) + l2 * cos(q_pos_(0) + q_pos_(1));
     p_ref_(1) = l1 * sin(q_pos_(0)) + l2 * sin(q_pos_(0) + q_pos_(1));
     p_dot_ref_.setZero();
@@ -277,6 +281,8 @@ controller_interface::return_type ExampleAcadosController::update(
   if (is_first_itr_) {  // this is the first iteration
     // Set initial state values for all stages of the NMPC problem
     all_ok &= (0 == acados_solver_->initialize_state_values(x_values_map));
+    // Update the first iteration flag
+    is_first_itr_ = false;
   }
   // Set initial state values for the first stage of the NMPC problem
   all_ok &= (0 == acados_solver_->set_initial_state_values(x_values_map));
@@ -292,19 +298,15 @@ controller_interface::return_type ExampleAcadosController::update(
   std::vector<double> R_diag = get_node()->get_parameter("nmpc.R_diag").as_double_array();
 
   acados::ValueMap p_values_map;
+  p_values_map["l1"] = std::vector{l1};
+  p_values_map["l2"] = std::vector{l2};
+  p_values_map["m1"] = std::vector{m1};
+  p_values_map["m2"] = std::vector{m2};
   p_values_map["p_ref"] = std::vector(&p_ref_[0], p_ref_.data() + p_ref_.size());
   p_values_map["p_dot_ref"] = std::vector(&p_dot_ref_[0], p_dot_ref_.data() + p_dot_ref_.size());
   p_values_map["Q_pos_diag"] = Q_pos_diag;
   p_values_map["Q_vel_diag"] = Q_vel_diag;
   p_values_map["R_diag"] = R_diag;
-
-  // std::cout << "q_pos: " << q_pos_[0] << ", " << q_pos_[1] << std::endl;
-  // std::cout << "q_vel: " << q_vel_[0] << ", " << q_vel_[1] << std::endl;
-  // std::cout << "p_ref: " << p_ref_[0] << ", " << p_ref_[1] << std::endl;
-  // std::cout << "p_dot_ref: " << p_dot_ref_[0] << ", " << p_dot_ref_[1] << std::endl;
-  // std::cout << "Q_pos_diag: " << Q_pos_diag[0] << ", " << Q_pos_diag[1] << std::endl;
-  // std::cout << "Q_vel_diag: " << Q_vel_diag[0] << ", " << Q_vel_diag[1] << std::endl;
-  // std::cout << "R_diag: " << R_diag[0] << ", " << R_diag[1] << std::endl;
 
   if (0 != acados_solver_->set_runtime_parameters(p_values_map)) {
     RCLCPP_ERROR(get_node()->get_logger(), "Failed to set NMPC runtime parameters!");
@@ -322,6 +324,11 @@ controller_interface::return_type ExampleAcadosController::update(
     tau_cmd_(1) = u_values_map["tau"][1];
   }
 
+  // Retrieve algebraic state values if needed
+  // acados::ValueMap z_values_map = acados_solver_->get_algebraic_state_values_as_map(0);
+  // std::cout << "p: " << z_values_map["p"][0] << ", " << z_values_map["p"][1] << std::endl  << std::endl;
+
+  // Send command to robot
   if (!all_ok) {
     RCLCPP_ERROR(get_node()->get_logger(), "Error during update()! Setting controls to zero.");
     tau_cmd_.setZero();
@@ -330,15 +337,8 @@ controller_interface::return_type ExampleAcadosController::update(
     return controller_interface::return_type::ERROR;
   }
 
-  // Send command to robot
   command_interfaces_[0].set_value(tau_cmd_(0));
   command_interfaces_[1].set_value(tau_cmd_(1));
-
-  // Update the first iteration flag if needed
-  if (is_first_itr_) {
-    is_first_itr_ = false;
-  }
-
   return controller_interface::return_type::OK;
 }
 

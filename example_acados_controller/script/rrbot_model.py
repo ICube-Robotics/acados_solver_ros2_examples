@@ -21,12 +21,12 @@ class RRBotModel:
         self.sym_q = SX.sym('q', 2, 1)          # Joint position
         self.sym_q_dot = SX.sym('q_dot', 2, 1)  # Joint velocity
         self.sym_tau = SX.sym('tau', 2, 1)      # Joint torques  (controls)
-        self.sym_algebraic_p = SX.sym('p_algebraic', 2, 1)          # Cart. position
+        self.sym_algebraic_p = SX.sym('p_algebraic', 2, 1)  # Cart. position
 
-        self.sym_l1 = SX.sym('l1', 1)  # length of the first link [m] : default = 1.0
-        self.sym_l2 = SX.sym('l2', 1)  # length of the second link [m] : default = 1.0
-        self.sym_m1 = SX.sym('m1', 1)  # mass of the first link [Kg] : default = 1.0
-        self.sym_m2 = SX.sym('m2', 1)  # mass of the second link [Kg] : default = 1.0
+        self.sym_l1 = SX.sym('l1', 1)  # length of the first link [m] :(= 1)
+        self.sym_l2 = SX.sym('l2', 1)  # length of the second link [m] : (= 1)
+        self.sym_m1 = SX.sym('m1', 1)  # mass of the first link [Kg] : (= 1)
+        self.sym_m2 = SX.sym('m2', 1)  # mass of the second link [Kg] : (= 1)
 
         # CoG of the first link [m]
         self.sym_lc1 = self.sym_l1 / 2.
@@ -42,9 +42,11 @@ class RRBotModel:
         B = SX.zeros(2, 2)
         B[0, 0] = self.sym_m1 * self.sym_lc1 * self.sym_lc1 + self.sym_m2 * (
             self.sym_l1 * self.sym_l1 + self.sym_lc2 * self.sym_lc2
-            + 2 * self.sym_l1 * self.sym_lc2 * cos(self.sym_q[1])) + self.sym_i1 + self.sym_i2
+            + 2 * self.sym_l1 * self.sym_lc2 * cos(self.sym_q[1])) \
+            + self.sym_i1 + self.sym_i2
         B[0, 1] = self.sym_m2 * (
-                self.sym_lc2 * self.sym_lc2 + self.sym_l1 * self.sym_lc2 * cos(self.sym_q[1])
+                self.sym_lc2 * self.sym_lc2
+                + self.sym_l1 * self.sym_lc2 * cos(self.sym_q[1])
             ) + self.sym_i2
         B[1, 0] = B[0, 1]
         B[1, 1] = self.sym_m2 * self.sym_lc2 * self.sym_lc2 + self.sym_i2
