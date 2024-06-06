@@ -18,6 +18,6 @@ nmpc_controller:
       plugin_name: acados_solver_plugins/RrbotCartesianTracking
       N : 10
       Ts: 0.005  # 1 / update_rate
-      Q_pos_diag : [4000., 4000.]
-      Q_vel_diag : [1000., 1000.]
+      Q_pos_diag : [1000., 1000.]
+      Q_vel_diag : [100., 100.]
       R_diag : [1., 1.]

@@ -19,7 +19,7 @@ def export_acados_ocp() -> AcadosOcp:
     # default state and control bounds
     tau_1_max = 25.0  # Nm
     tau_2_max = 10.0  # Nm
-    q_dot_max = np.pi/4  # rad/s
+    q_dot_max = 2.0  # rad/s
     q_1_bounds = (- np.pi, 0.0)
     q_2_bounds = (-np.pi / 2, np.pi / 2)
 
