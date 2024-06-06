@@ -16,62 +16,57 @@ class RRBotModel:
         # gravity constant [m/s^2]
         self.gravity = 9.81
 
-        # mass of the first link [Kg]
-        self.m1 = 1.0
-        # length of the first link [m]
-        self.l1 = 1.0
-        # CoG of the first link [m]
-        self.lc1 = self.l1/2
-        # Inertia of the first link [Kg*m^2]
-        self.i1 = self.m1 / 12 * self.l1 * self.l1
-
-        # mass of the second link [Kg]
-        self.m2 = 1.0
-        # length of the second link [m]
-        self.l2 = 1.0
-        # CoG of the second link [m]
-        self.lc2 = self.l2 / 2
-        # Inertia of the second link [Kg*m^2]
-        self.i2 = self.m2 / 12 * self.l2 * self.l2
-
         # Casadi symbols
         # --------------
         self.sym_q = SX.sym('q', 2, 1)          # Joint position
         self.sym_q_dot = SX.sym('q_dot', 2, 1)  # Joint velocity
         self.sym_tau = SX.sym('tau', 2, 1)      # Joint torques  (controls)
-        # self.sym_p = SX.sym('p', 2, 1)          # Cart. position
-        # self.sym_p_dot = SX.sym('p_dot', 2, 1)  # Cart. velocity
+        self.sym_algebraic_p = SX.sym('p_algebraic', 2, 1)          # Cart. position
+
+        self.sym_l1 = SX.sym('l1', 1)  # length of the first link [m] : default = 1.0
+        self.sym_l2 = SX.sym('l2', 1)  # length of the second link [m] : default = 1.0
+        self.sym_m1 = SX.sym('m1', 1)  # mass of the first link [Kg] : default = 1.0
+        self.sym_m2 = SX.sym('m2', 1)  # mass of the second link [Kg] : default = 1.0
+
+        # CoG of the first link [m]
+        self.sym_lc1 = self.sym_l1 / 2.
+        # Inertia of the first link [Kg*m^2]
+        self.sym_i1 = self.sym_m1 / 12. * self.sym_l1 * self.sym_l1
+        # CoG of the second link [m]
+        self.sym_lc2 = self.sym_l2 / 2.
+        # Inertia of the second link [Kg*m^2]
+        self.sym_i2 = self.sym_m2 / 12. * self.sym_l2 * self.sym_l2
 
         # Expressions
         # ------------
         B = SX.zeros(2, 2)
-        B[0, 0] = self.m1 * self.lc1 * self.lc1 + self.m2 * (
-            self.l1 * self.l1 + self.lc2 * self.lc2
-            + 2 * self.l1 * self.lc2 * cos(self.sym_q[1])) + self.i1 + self.i2
-        B[0, 1] = self.m2 * (
-                self.lc2 * self.lc2 + self.l1 * self.lc2 * cos(self.sym_q[1])
-            ) + self.i2
+        B[0, 0] = self.sym_m1 * self.sym_lc1 * self.sym_lc1 + self.sym_m2 * (
+            self.sym_l1 * self.sym_l1 + self.sym_lc2 * self.sym_lc2
+            + 2 * self.sym_l1 * self.sym_lc2 * cos(self.sym_q[1])) + self.sym_i1 + self.sym_i2
+        B[0, 1] = self.sym_m2 * (
+                self.sym_lc2 * self.sym_lc2 + self.sym_l1 * self.sym_lc2 * cos(self.sym_q[1])
+            ) + self.sym_i2
         B[1, 0] = B[0, 1]
-        B[1, 1] = self.m2 * self.lc2 * self.lc2 + self.i2
+        B[1, 1] = self.sym_m2 * self.sym_lc2 * self.sym_lc2 + self.sym_i2
 
         C_times_q_dot = SX.zeros(2, 1)
         C_times_q_dot[0] = (
-            -self.m2 * self.l1 * self.lc2
+            -self.sym_m2 * self.sym_l1 * self.sym_lc2
             * self.sym_q_dot[1] * sin(self.sym_q[1])) \
             * self.sym_q_dot[0] + (
-                -self.m2 * self.l1 * self.lc2
+                -self.sym_m2 * self.sym_l1 * self.sym_lc2
                 * (self.sym_q_dot[0] + self.sym_q_dot[1]) * sin(self.sym_q[1])
             ) * self.sym_q_dot[1]
         C_times_q_dot[1] = (
-                self.m2 * self.l1 * self.lc2 * self.sym_q_dot[0]
+                self.sym_m2 * self.sym_l1 * self.sym_lc2 * self.sym_q_dot[0]
                 * sin(self.sym_q[1])) * self.sym_q_dot[0]
 
         G = SX.zeros(2, 1)
-        G[0] = (self.m1 * self.lc1 * cos(self.sym_q[0])
-                + self.m2 * (self.l1 * cos(self.sym_q[0])
-                + self.lc2 * cos(self.sym_q[0] + self.sym_q[1]))
+        G[0] = (self.sym_m1 * self.sym_lc1 * cos(self.sym_q[0])
+                + self.sym_m2 * (self.sym_l1 * cos(self.sym_q[0])
+                + self.sym_lc2 * cos(self.sym_q[0] + self.sym_q[1]))
                 ) * self.gravity
-        G[1] = self.m2 * self.lc2 * cos(
+        G[1] = self.sym_m2 * self.sym_lc2 * cos(
             self.sym_q[0] + self.sym_q[1]) * self.gravity
 
         # Forward dynamics: q_dot2 = f_dyn(q, q_dot, tau)
@@ -80,10 +75,10 @@ class RRBotModel:
 
         # Forward kinematics: p = fk(q) and p_dot = J(q) * q_dot
         self.expr_fk = vertcat(
-            self.l1 * cos(self.sym_q[0])
-            + self.l2 * cos(self.sym_q[0] + self.sym_q[1]),
-            self.l1 * sin(self.sym_q[0])
-            + self.l2 * sin(self.sym_q[0] + self.sym_q[1])
+            self.sym_l1 * cos(self.sym_q[0])
+            + self.sym_l2 * cos(self.sym_q[0] + self.sym_q[1]),
+            self.sym_l1 * sin(self.sym_q[0])
+            + self.sym_l2 * sin(self.sym_q[0] + self.sym_q[1])
         )
         self.expr_J = ca.jacobian(self.expr_fk, self.sym_q)  # Auto. diff
 
@@ -100,7 +95,7 @@ class RRBotModel:
         u = vertcat(self.sym_tau)
 
         # algebraic state variables
-        z = vertcat([])
+        z = vertcat(self.sym_algebraic_p)
 
         # dynamics (ODE) of the form: x_dot = ODE(x, u)
         function_ODE = vertcat(
@@ -110,7 +105,8 @@ class RRBotModel:
 
         # full DAE model (i.e., implicit)
         f_impl = vertcat(
-            xdot - function_ODE
+            xdot - function_ODE,
+            self.sym_algebraic_p - self.sym_p,  # for debugging
         )
 
         # Instantiate Acados model object and return
@@ -120,7 +116,12 @@ class RRBotModel:
         model.xdot = xdot
         model.u = u
         model.z = z
-        model.p = vertcat([])  # unused at this point
+        model.p = vertcat(
+            self.sym_l1,
+            self.sym_l2,
+            self.sym_m1,
+            self.sym_m2
+        )
         model.name = 'rrbot'
 
         return model
