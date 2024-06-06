@@ -26,9 +26,6 @@ class InteractiveCartesianReference(Node):
     def __init__(self):
         super().__init__('interactive_cartesian_reference_node')
 
-        self.origin_pendulum = np.array([0., -0.2, 2.])
-        self.marker_position = self.origin_pendulum + np.array([0., 0., -2.])
-
         self.publisher_ = self.create_publisher(
             Float64MultiArray,
             '/cartesian_reference',
@@ -40,6 +37,9 @@ class InteractiveCartesianReference(Node):
             InteractiveMarkerServer(self, 'interactive_markers')
 
         # create an interactive marker for our server
+        origin_pendulum = np.array([0., -0.2, 2.])
+        self.marker_position = origin_pendulum + np.array([0., 0., -2.])
+
         int_marker = InteractiveMarker()
         int_marker.header.frame_id = "world"
         int_marker.name = "interactive_reference_marker"
@@ -89,14 +89,12 @@ class InteractiveCartesianReference(Node):
 
     def update(self):
         msg = Float64MultiArray()
-        ref_wrt_world = np.array([
+        ref_position = np.array([
             self.marker_position[0],
-            self.marker_position[1],
             self.marker_position[2]
-        ])
-        ref_wrt_pendulum_origin = ref_wrt_world - self.origin_pendulum
+        ])  # in XZ plane
         msg.data = [
-            ref_wrt_pendulum_origin[0], ref_wrt_pendulum_origin[2],
+            ref_position[0], ref_position[1],
             0.0, 0.0  # no velocity for now
         ]
         self.publisher_.publish(msg)

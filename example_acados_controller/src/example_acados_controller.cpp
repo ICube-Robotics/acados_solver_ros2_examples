@@ -229,6 +229,7 @@ controller_interface::return_type ExampleAcadosController::update(
   const rclcpp::Duration & /*period*/)
 {
   // Robot parameters
+  double l0 = 2.0;
   double l1 = 1.0;
   double l2 = 1.0;
   double m1 = 1.0;
@@ -298,6 +299,7 @@ controller_interface::return_type ExampleAcadosController::update(
   std::vector<double> R_diag = get_node()->get_parameter("nmpc.R_diag").as_double_array();
 
   acados::ValueMap p_values_map;
+  p_values_map["l0"] = std::vector{l0};
   p_values_map["l1"] = std::vector{l1};
   p_values_map["l2"] = std::vector{l2};
   p_values_map["m1"] = std::vector{m1};

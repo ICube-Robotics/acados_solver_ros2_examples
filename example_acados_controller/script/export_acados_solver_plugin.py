@@ -16,6 +16,13 @@ from rrbot_model import RRBotModel
 
 
 def export_acados_ocp() -> AcadosOcp:
+    # default state and control bounds
+    tau_1_max = 25.0  # Nm
+    tau_2_max = 10.0  # Nm
+    q_dot_max = np.pi/4  # rad/s
+    q_1_bounds = (- np.pi, 0.0)
+    q_2_bounds = (-np.pi / 2, np.pi / 2)
+
     # setup base robot model
     rrbot_model = RRBotModel()
     model = rrbot_model.export_acados_model()
@@ -63,27 +70,21 @@ def export_acados_ocp() -> AcadosOcp:
         err_p.T @ Q_err_p @ err_p \
         + err_p_dot.T @ Q_err_p_dot @ err_p_dot \
         + rrbot_model.sym_tau.T @ R @ rrbot_model.sym_tau
+
+    # Note: the terminal cost should be chosen more carefully in practice.
+    # This is not very rigorous, but enough for the purpose of this example.
     ocp.model.cost_expr_ext_cost_e = \
         err_p.T @ Q_err_p @ err_p \
         + err_p_dot.T @ Q_err_p_dot @ err_p_dot
-    # Note: the terminal cost should be chosen more carefully in practice.
-    # This is not very rigorous, but enough for the purpose of this example.
 
     # set constraints
     x0 = np.zeros((model.x.shape[0],))
     ocp.constraints.x0 = x0  # placeholder initial state
 
-    # default bounds
-    tau1_max = 25.0  # Nm
-    tau2_max = 10.0  # Nm
-    q_dot_max = np.pi  # rad/s
-    q_1_bounds = (- np.pi, 0.0)
-    q_2_bounds = (-np.pi, np.pi)
-
     # control constraints
     ocp.constraints.idxbu = np.array([0, 1])
-    ocp.constraints.lbu = np.array([- tau1_max, - tau2_max])
-    ocp.constraints.ubu = np.array([+ tau1_max, + tau2_max])
+    ocp.constraints.lbu = np.array([- tau_1_max, - tau_2_max])
+    ocp.constraints.ubu = np.array([+ tau_1_max, + tau_2_max])
 
     # state constraints
     ocp.constraints.lbx = np.array(
@@ -124,15 +125,16 @@ def main() -> int:
         'p': [0, 1],
     }
     p_index_map = {
-        'l1': [0],
-        'l2': [1],
-        'm1': [2],
-        'm2': [3],
-        'p_ref': [4, 5],
-        'p_dot_ref': [6, 7],
-        'Q_pos_diag': [8, 9],
-        'Q_vel_diag': [10, 11],
-        'R_diag': [12, 13],
+        'l0': [0],
+        'l1': [1],
+        'l2': [2],
+        'm1': [3],
+        'm2': [4],
+        'p_ref': [5, 6],
+        'p_dot_ref': [7, 8],
+        'Q_pos_diag': [9, 10],
+        'Q_vel_diag': [11, 12],
+        'R_diag': [13, 14],
     }
     u_index_map = {
         'tau': [0, 1],
