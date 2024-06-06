@@ -75,6 +75,12 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
+    interactive_cartesian_reference_node = Node(
+        package="example_acados_bringup",
+        executable="interactive_cartesian_reference",
+        output="both",
+    )
+
     # Load controllers
     # ---------------------------------------
 
@@ -108,6 +114,7 @@ def generate_launch_description():
         control_node,
         robot_state_pub_node,
         rviz_node,
+        interactive_cartesian_reference_node,
         joint_state_broadcaster_spawner,
         nmpc_controller_spawner,
     ]

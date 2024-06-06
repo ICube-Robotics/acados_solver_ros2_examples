@@ -29,7 +29,7 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/realtime_buffer.h"
-#include "trajectory_msgs/msg/joint_trajectory.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
 
 #include "example_acados_controller/visibility_control.h"
 
@@ -39,7 +39,7 @@
 
 namespace example_acados_controller
 {
-using CmdType = trajectory_msgs::msg::JointTrajectory;
+using CmdType = std_msgs::msg::Float64MultiArray;
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 class ExampleAcadosController : public controller_interface::ControllerInterface
@@ -84,7 +84,7 @@ protected:
   // Basic controller setup
   std::vector<std::string> joint_names_;
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
-  rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;
+  rclcpp::Subscription<CmdType>::SharedPtr reference_subscriber_;
   std::string logger_name_;
 
   /// Acados solver pluginlib loader

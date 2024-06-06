@@ -7,6 +7,10 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1
+        - /TF1
+        - /TF1/Frames1
+        - /Marker1
+        - /InteractiveMarkers1
       Splitter Ratio: 0.5
     Tree Height: 708
   - Class: rviz_common/Selection
@@ -130,7 +134,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -138,6 +142,15 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /reference_marker
+      Value: true
+    - Class: rviz_default_plugins/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Interactive Markers Namespace: /interactive_markers
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
       Value: true
   Enabled: true
   Global Options:
@@ -185,25 +198,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 10.568682670593262
+      Distance: 4.05588436126709
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -0.11908162385225296
+        Y: 0.2466626614332199
+        Z: 0.5816200971603394
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6953979134559631
+      Pitch: 0.015398078598082066
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.028583526611328
+      Yaw: 4.618586540222168
     Saved: ~
 Window Geometry:
   Displays:
@@ -221,5 +234,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1908
-  X: 159
-  Y: 31
+  X: 2156
+  Y: -42

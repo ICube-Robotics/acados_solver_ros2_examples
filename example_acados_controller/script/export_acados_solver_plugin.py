@@ -74,9 +74,9 @@ def export_acados_ocp() -> AcadosOcp:
     x0 = np.zeros((model.x.shape[0],))
     ocp.constraints.x0 = x0  # placeholder initial state
 
-    tau_max = 2.0
-    # ocp.constraints.lbu = np.array([-tau_max]*2)
-    # ocp.constraints.ubu = np.array([+tau_max]*2)
+    tau_max = 10.0
+    # ocp.constraints.lbu = np.array([-tau_max] * 2)
+    # ocp.constraints.ubu = np.array([+tau_max] * 2)
     # ocp.constraints.idxbu = np.array([0, 1])
 
     q_dot_max = np.pi  # rad/s

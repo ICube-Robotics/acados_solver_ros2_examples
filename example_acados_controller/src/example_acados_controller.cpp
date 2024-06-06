@@ -34,7 +34,7 @@ using hardware_interface::LoanedCommandInterface;
 ExampleAcadosController::ExampleAcadosController()
 : controller_interface::ControllerInterface(),
   rt_command_ptr_(nullptr),
-  joints_command_subscriber_(nullptr)
+  reference_subscriber_(nullptr)
 {
 }
 
@@ -117,8 +117,8 @@ CallbackReturn ExampleAcadosController::on_configure(
 
   // the desired joint trajectory is queried from the commands topic
   // and passed to update via a rt pipe
-  joints_command_subscriber_ = get_node()->create_subscription<CmdType>(
-    "~/reference", rclcpp::SystemDefaultsQoS(),
+  reference_subscriber_ = get_node()->create_subscription<CmdType>(
+    "/cartesian_reference", rclcpp::SystemDefaultsQoS(),
     [this](const CmdType::SharedPtr msg) {rt_command_ptr_.writeFromNonRT(msg);});
 
   RCLCPP_INFO(get_node()->get_logger(), "configure successful");
@@ -229,7 +229,7 @@ controller_interface::return_type ExampleAcadosController::update(
   const rclcpp::Duration & /*period*/)
 {
   // get the data from the subscriber using the rt pipe
-  auto reference_joint_trajectory = rt_command_ptr_.readFromRT();
+  auto reference_cartesian_pose = rt_command_ptr_.readFromRT();
 
   // retrieve current robot state
   q_pos_(0) = state_interfaces_[0].get_value();
@@ -249,26 +249,24 @@ controller_interface::return_type ExampleAcadosController::update(
   }
 
   // retrieve reference position and velocity
-  if (!reference_joint_trajectory || !(*reference_joint_trajectory)) {
+  if (!reference_cartesian_pose || !(*reference_cartesian_pose)) {
     // no command received yet, use last position values and set velocitty ref to zero
     p_dot_ref_.setZero();
   } else {
     // checking proxy data validity
-    if (((*reference_joint_trajectory)->joint_names.size() != joint_names_.size()) ||
-      ((*reference_joint_trajectory)->points[0].positions.size() != joint_names_.size()) ||
-      ((*reference_joint_trajectory)->points[0].velocities.size() != joint_names_.size()) ||
-      ((*reference_joint_trajectory)->points[0].accelerations.size() != joint_names_.size()))
-    {
+    if ((*reference_cartesian_pose)->data.size() != 4) {
       RCLCPP_ERROR_THROTTLE(
         get_node()->get_logger(),
-        *get_node()->get_clock(), 1000, "command size does not match number of interfaces");
+        *get_node()->get_clock(), 1000,
+        "command size does not match number of interfaces (should be [q1, q2, q_dot1, q_dot2])");
       return controller_interface::return_type::ERROR;
     }
-    p_ref_(0) = (*reference_joint_trajectory)->points[0].positions[0];
-    p_ref_(1) = (*reference_joint_trajectory)->points[0].positions[1];
-    p_dot_ref_(0) = (*reference_joint_trajectory)->points[0].velocities[0];
-    p_dot_ref_(1) = (*reference_joint_trajectory)->points[0].velocities[1];
+    p_ref_(0) = (*reference_cartesian_pose)->data[0];
+    p_ref_(1) = (*reference_cartesian_pose)->data[1];
+    p_dot_ref_(0) = (*reference_cartesian_pose)->data[2];
+    p_dot_ref_(1) = (*reference_cartesian_pose)->data[3];
   }
+  // RCLCPP_INFO(get_node()->get_logger(), "p_ref =[ %f, %f]", p_ref_(0), p_ref_(1));
 
   // Set nmpc initial state
   acados::ValueMap x_values_map;

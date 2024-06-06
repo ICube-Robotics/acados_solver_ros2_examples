@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 200  # Hz
+    update_rate: 500  # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -17,7 +17,7 @@ nmpc_controller:
     nmpc:
       plugin_name: acados_solver_plugins/RrbotCartesianTracking
       N : 10
-      Ts: 0.005  # 1 / update_rate
-      Q_pos_diag : [100., 100.]
-      Q_vel_diag : [20., 20.]
+      Ts: 0.002  # 1 / update_rate
+      Q_pos_diag : [4000., 4000.]
+      Q_vel_diag : [1000., 1000.]
       R_diag : [1., 1.]
