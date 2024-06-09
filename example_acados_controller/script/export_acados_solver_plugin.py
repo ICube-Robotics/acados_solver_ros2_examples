@@ -70,7 +70,6 @@ def export_acados_ocp() -> AcadosOcp:
         err_p.T @ Q_err_p @ err_p \
         + err_p_dot.T @ Q_err_p_dot @ err_p_dot \
         + rrbot_model.sym_tau.T @ R @ rrbot_model.sym_tau
-
     # Note: the terminal cost should be chosen more carefully in practice.
     # This is not very rigorous, but enough for the purpose of this example.
     ocp.model.cost_expr_ext_cost_e = \
@@ -102,7 +101,6 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.solver_options.tf = Tf
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.qp_solver_cond_N = int(N/4)
     ocp.solver_options.hpipm_mode = 'BALANCE'  # 'SPEED'  # 'ROBUST'
     ocp.solver_options.qp_solver_warm_start = 2  # 0 = None, 1 = warm, 2 =hot
     ocp.solver_options.qp_solver_iter_max = 50

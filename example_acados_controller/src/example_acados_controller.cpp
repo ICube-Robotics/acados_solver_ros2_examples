@@ -328,7 +328,7 @@ controller_interface::return_type ExampleAcadosController::update(
 
   // Retrieve algebraic state values if needed
   // acados::ValueMap z_values_map = acados_solver_->get_algebraic_state_values_as_map(0);
-  // std::cout << "p: " << z_values_map["p"][0] << ", " << z_values_map["p"][1] << std::endl  << std::endl;
+  // std::cout << "p: " << z_values_map["p"][0] << ", " << z_values_map["p"][1] << std::endl;
 
   // Send command to robot
   if (!all_ok) {

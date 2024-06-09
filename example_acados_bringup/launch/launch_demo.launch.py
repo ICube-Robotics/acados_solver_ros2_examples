@@ -2,10 +2,12 @@
 # License: Apache License, Version 2.0
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument  # noqa: F401
+from launch.actions import DeclareLaunchArgument, ExecuteProcess  # noqa: F401
+from launch.conditions import IfCondition
 from launch.substitutions import (
     Command,
     FindExecutable,
+    LaunchConfiguration,
     PathJoinSubstitution
 )
 from launch_ros.actions import Node
@@ -18,6 +20,14 @@ def generate_launch_description():
     # ========================================
     declared_arguments = []
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_plotjuggler",
+            default_value="false",
+            description="Launch plotjuggler to visualize joint state if true."
+        ))
+
+    launch_plotjuggler = LaunchConfiguration("launch_plotjuggler")
     # ========================================
     # Get config files
     # ========================================
@@ -41,6 +51,13 @@ def generate_launch_description():
             FindPackageShare("example_acados_bringup"),
             "config",
             "controllers.yaml",
+        ]
+    )
+    plotjuggler_layout_file = PathJoinSubstitution(
+        [
+            FindPackageShare("example_acados_bringup"),
+            "config",
+            "layout_plotjuggler.xml"
         ]
     )
     rviz_config_file = PathJoinSubstitution(
@@ -102,10 +119,20 @@ def generate_launch_description():
         ],
     )
 
-    # Launch dummy reference
+    # Launch plotjuggler
     # ---------------------------------------
 
-    # TODO
+    plotjuggler = ExecuteProcess(
+        cmd=[
+            'ros2',
+            'run',
+            'plotjuggler',
+            'plotjuggler',
+            '-l', plotjuggler_layout_file,
+        ],
+        output="screen",
+        condition=IfCondition(launch_plotjuggler),
+    )
 
     # ========================================
     # Return launch description
@@ -114,6 +141,7 @@ def generate_launch_description():
         control_node,
         robot_state_pub_node,
         rviz_node,
+        plotjuggler,
         interactive_cartesian_reference_node,
         joint_state_broadcaster_spawner,
         nmpc_controller_spawner,
