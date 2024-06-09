@@ -19,11 +19,9 @@
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
 
-  <exec_depend>rrbot_description</exec_depend>
-
+  <exec_depend>example_acados_description</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>xacro</exec_depend>
-
 
   <export>
     <build_type>ament_cmake</build_type>
