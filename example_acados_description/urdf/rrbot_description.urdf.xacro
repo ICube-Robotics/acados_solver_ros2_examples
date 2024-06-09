@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="rrbot" params="parent *origin">
+
+  <!-- Constants for robot dimensions -->
+  <xacro:property name="mass" value="1" /> <!-- arbitrary value for mass -->
+  <xacro:property name="width" value="0.1" /> <!-- Square dimensions (widthxwidth) of beams -->
+  <xacro:property name="height1" value="2" /> <!-- Link 1 -->
+  <xacro:property name="height2" value="1" /> <!-- Link 2 -->
+  <xacro:property name="height3" value="1" /> <!-- Link 3 -->
+  <xacro:property name="axel_offset" value="0.05" /> <!-- Space btw top of beam and the each joint -->
+
+  <material name="orange">
+     <color rgba="1 0.5 0 1"/>
+  </material>
+
+  <material name="yellow">
+     <color rgba="1 1 0 1"/>
+  </material>
+
+  <joint name="base_joint" type="fixed">
+    <xacro:insert_block name="origin" />
+    <parent link="${parent}"/>
+    <child link="base_link" />
+  </joint>
+
+  <!-- Base Link -->
+  <link name="base_link">
+    <collision>
+      <origin xyz="0 ${height1/2} 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${height1} ${width}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 ${height1/2} 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${height1} ${width}"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 ${height1/2} 0" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass / 12.0 * (width*width + height1*height1)}" ixy="0.0" ixz="0.0"
+        izz="${mass / 12.0 * (height1*height1 + width*width)}" iyz="0.0"
+        iyy="${mass / 12.0 * (width*width + width*width)}"/>
+      </inertial>
+    </link>
+
+    <joint name="joint1" type="continuous">
+      <parent link="base_link"/>
+      <child link="link1"/>
+      <origin xyz="0 ${height1 - axel_offset} ${width}" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <dynamics damping="0.7"/>
+    </joint>
+
+    <!-- Middle Link -->
+    <link name="link1">
+      <collision>
+        <origin xyz="${height2/2 - axel_offset} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${height2} ${width} ${width}"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="${height2/2 - axel_offset} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${height2} ${width} ${width}"/>
+        </geometry>
+        <material name="yellow"/>
+      </visual>
+
+      <inertial>
+        <origin xyz="${height2/2 - axel_offset} 0 0" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <inertia
+          izz="${mass / 12.0 * (width*width + height2*height2)}" ixy="0.0" ixz="0.0"
+          iyy="${mass / 12.0 * (height2*height2 + width*width)}" iyz="0.0"
+          ixx="${mass / 12.0 * (width*width + width*width)}"/>
+        </inertial>
+      </link>
+
+      <joint name="joint2" type="continuous">
+        <parent link="link1"/>
+        <child link="link2"/>
+        <origin xyz="${height2 - axel_offset*2} 0 ${width}" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <dynamics damping="0.7"/>
+      </joint>
+
+      <!-- Top Link -->
+      <link name="link2">
+        <collision>
+          <origin xyz="${height3/2 - axel_offset} 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="${height3} ${width} ${width}"/>
+          </geometry>
+        </collision>
+
+        <visual>
+          <origin xyz="${height3/2 - axel_offset} 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="${height3} ${width} ${width}"/>
+          </geometry>
+          <material name="orange"/>
+        </visual>
+
+        <inertial>
+          <origin xyz="${height3/2 - axel_offset} 0 0" rpy="0 0 0"/>
+          <mass value="${mass}"/>
+          <inertia
+            izz="${mass / 12.0 * (width*width + height3*height3)}" ixy="0.0" ixz="0.0"
+            iyy="${mass / 12.0 * (height3*height3 + width*width)}" iyz="0.0"
+            ixx="${mass / 12.0 * (width*width + width*width)}"/>
+          </inertial>
+        </link>
+
+        <joint name="tool_joint" type="fixed">
+          <origin xyz="1 0 0" rpy="0 0 0" />
+          <parent link="link2"/>
+          <child link="tool_link" />
+        </joint>
+
+        <!-- Tool Link -->
+        <link name="tool_link">
+        </link>
+
+  </xacro:macro>
+
+</robot>
