@@ -47,6 +47,12 @@ CallbackReturn ExampleAcadosController::on_init()
     auto_declare<std::string>("nmpc.plugin_name", std::string());
     auto_declare<int>("nmpc.N", 10);
     auto_declare<double>("nmpc.Ts", -1);
+    auto_declare<std::vector<double>>(
+      "nmpc.Q_pos_diag", std::vector<double>{1000.0, 1000.0});
+    auto_declare<std::vector<double>>(
+      "nmpc.Q_vel_diag", std::vector<double>{50.0, 50.0});
+    auto_declare<std::vector<double>>(
+      "nmpc.R_diag", std::vector<double>{1.0, 1.0});
   } catch (const std::exception & e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
