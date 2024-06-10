@@ -79,48 +79,32 @@ class RRBotModel:
 
         # Forward kinematics: p = fk(q) and p_dot = J(q) * q_dot
         # note that p is defined in the XZ plane
-        self.expr_fk = vertcat(
+        self.sym_p = vertcat(
             self.sym_l1 * cos(self.sym_q[0])
             + self.sym_l2 * cos(self.sym_q[0] + self.sym_q[1]),
             self.sym_l0 + self.sym_l1 * sin(self.sym_q[0])
             + self.sym_l2 * sin(self.sym_q[0] + self.sym_q[1])
         )
-        self.expr_J = ca.jacobian(self.expr_fk, self.sym_q)  # Auto. diff
-
-        self.sym_p = self.expr_fk
-        self.sym_p_dot = self.expr_J @ self.sym_q_dot
+        self.sym_J = ca.jacobian(self.sym_p, self.sym_q)  # Auto. diff
+        self.sym_p_dot = self.sym_J @ self.sym_q_dot
 
         # Store joint inertia
         self.joint_inertia_matrix = B
 
     def export_acados_model(self) -> AcadosModel:
+        # Instantiate Acados model object
+        model = AcadosModel()
+        model.name = 'rrbot'
+
         # state & control variables
-        x = vertcat(self.sym_q, self.sym_q_dot)
-        xdot = SX.sym('x_dot', x.shape[0], 1)
-        u = vertcat(self.sym_tau)
+        model.x = vertcat(self.sym_q, self.sym_q_dot)
+        model.xdot = SX.sym('x_dot', model.x.shape[0])
+        model.u = vertcat(self.sym_tau)
 
         # algebraic state variables
-        z = vertcat(self.sym_algebraic_p)
+        model.z = vertcat(self.sym_algebraic_p)
 
-        # dynamics (ODE) of the form: x_dot = ODE(x, u)
-        function_ODE = vertcat(
-            self.sym_q_dot,
-            self.expr_forward_dynamics  # joint acc. from torques
-        )
-
-        # full DAE model (i.e., implicit)
-        f_impl = vertcat(
-            xdot - function_ODE,
-            self.sym_algebraic_p - self.sym_p,  # for debugging
-        )
-
-        # Instantiate Acados model object and return
-        model = AcadosModel()
-        model.f_impl_expr = f_impl
-        model.x = x
-        model.xdot = xdot
-        model.u = u
-        model.z = z
+        # parameters
         model.p = vertcat(
             self.sym_l0,
             self.sym_l1,
@@ -128,6 +112,17 @@ class RRBotModel:
             self.sym_m1,
             self.sym_m2
         )
-        model.name = 'rrbot'
+
+        # dynamics (ODE) of the form: x_dot = ODE(x, u)
+        model.f_expl_expr = vertcat(
+            self.sym_q_dot,
+            self.expr_forward_dynamics  # joint acc. from torques
+        )
+
+        # full DAE model (i.e., implicit)
+        model.f_impl_expr = vertcat(
+            model.xdot - model.f_expl_expr,
+            self.sym_algebraic_p - self.sym_p,  # for debugging
+        )
 
         return model
