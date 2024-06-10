@@ -1,66 +1,88 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
- <tabbed_widget name="Main Window" parent="main_window">
+ <tabbed_widget parent="main_window" name="Main Window">
   <Tab containers="1" tab_name="joint states">
    <Container>
-    <DockSplitter orientation="-" sizes="0.332995;0.33401;0.332995" count="3">
-     <DockSplitter orientation="|" sizes="0.5;0.5" count="2">
+    <DockSplitter sizes="0.333333;0.333333;0.333333" orientation="-" count="3">
+     <DockSplitter sizes="0.5;0.5" orientation="|" count="2">
       <DockArea name="Joint position q_1">
-       <plot mode="TimeSeries" style="Lines" flip_y="false" flip_x="false">
-        <range left="16.995050" top="0.078538" right="24.994999" bottom="-3.220038"/>
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.814953" top="0.078538" left="184.819825" bottom="-3.220038"/>
         <limitY/>
-        <curve name="/joint_states/joint1/position" color="#000000"/>
-        <curve name="q1_min" color="#d62728"/>
-        <curve name="q1_max" color="#1f77b4"/>
+        <curve color="#000000" name="/joint_states/joint1/position"/>
+        <curve color="#d62728" name="q1_min"/>
+        <curve color="#1f77b4" name="q1_max"/>
        </plot>
       </DockArea>
       <DockArea name="Joint position q_2">
-       <plot mode="TimeSeries" style="Lines" flip_y="false" flip_x="false">
-        <range left="16.995050" top="1.649288" right="24.994999" bottom="-1.649288"/>
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.814953" top="1.649288" left="184.819825" bottom="-1.649288"/>
         <limitY/>
-        <curve name="/joint_states/joint2/position" color="#000000"/>
-        <curve name="q2_min" color="#ff290e"/>
-        <curve name="q2_max" color="#1a6ac9"/>
+        <curve color="#000000" name="/joint_states/joint2/position"/>
+        <curve color="#ff290e" name="q2_min"/>
+        <curve color="#1a6ac9" name="q2_max"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" sizes="0.502525;0.497475" count="2">
+     <DockSplitter sizes="0.502525;0.497475" orientation="|" count="2">
       <DockArea name="Joint velocity q_dot_1">
-       <plot mode="TimeSeries" style="Lines" flip_y="false" flip_x="false">
-        <range left="16.995050" top="2.100000" right="24.994999" bottom="-2.100000"/>
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.814953" top="2.100000" left="184.819825" bottom="-2.100000"/>
         <limitY/>
-        <curve name="/joint_states/joint1/velocity" color="#000000"/>
-        <curve name="q_dot_max" color="#1f77b4"/>
-        <curve name="q_dot_min" color="#d62728"/>
+        <curve color="#000000" name="/joint_states/joint1/velocity"/>
+        <curve color="#1f77b4" name="q_dot_max"/>
+        <curve color="#d62728" name="q_dot_min"/>
        </plot>
       </DockArea>
       <DockArea name="Joint velocity q_dot_2">
-       <plot mode="TimeSeries" style="Lines" flip_y="false" flip_x="false">
-        <range left="16.995050" top="2.100000" right="24.994999" bottom="-2.100000"/>
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.814953" top="2.100000" left="184.819825" bottom="-2.100000"/>
         <limitY/>
-        <curve name="/joint_states/joint2/velocity" color="#000000"/>
-        <curve name="q_dot_max" color="#1f77b4"/>
-        <curve name="q_dot_min" color="#d62728"/>
+        <curve color="#000000" name="/joint_states/joint2/velocity"/>
+        <curve color="#1f77b4" name="q_dot_max"/>
+        <curve color="#d62728" name="q_dot_min"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter orientation="|" sizes="0.502525;0.497475" count="2">
+     <DockSplitter sizes="0.502525;0.497475" orientation="|" count="2">
       <DockArea name="Joint control torque tau_1">
-       <plot mode="TimeSeries" style="Lines" flip_y="false" flip_x="false">
-        <range left="16.995050" top="26.250000" right="24.994999" bottom="-26.250000"/>
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.814953" top="26.250000" left="184.819825" bottom="-26.250000"/>
         <limitY/>
-        <curve name="/joint_states/joint1/effort" color="#000000"/>
-        <curve name="tau_1_max" color="#1a5ec9"/>
-        <curve name="tau_1_min" color="#ff390e"/>
+        <curve color="#000000" name="/joint_states/joint1/effort"/>
+        <curve color="#1a5ec9" name="tau_1_max"/>
+        <curve color="#ff390e" name="tau_1_min"/>
        </plot>
       </DockArea>
       <DockArea name="Joint control torque tau_2">
-       <plot mode="TimeSeries" style="Lines" flip_y="false" flip_x="false">
-        <range left="16.995050" top="10.500000" right="24.994999" bottom="-10.500000"/>
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.814953" top="10.500000" left="184.819825" bottom="-10.500000"/>
         <limitY/>
-        <curve name="/joint_states/joint2/effort" color="#000000"/>
-        <curve name="tau_2_max" color="#205feb"/>
-        <curve name="tau_2_min" color="#e7433a"/>
+        <curve color="#000000" name="/joint_states/joint2/effort"/>
+        <curve color="#205feb" name="tau_2_max"/>
+        <curve color="#e7433a" name="tau_2_min"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="reference position">
+   <Container>
+    <DockSplitter sizes="1" orientation="-" count="1">
+     <DockSplitter sizes="0.500578;0.499422" orientation="-" count="2">
+      <DockArea name="ref position along X">
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.818959" top="-2.149449" left="184.819065" bottom="-2.507927"/>
+        <limitY/>
+        <curve color="#1ac938" name="/cartesian_reference/data[0]"/>
+       </plot>
+      </DockArea>
+      <DockArea name="ref position along Z">
+       <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+        <range right="192.818959" top="0.893775" left="184.819065" bottom="0.693775"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/cartesian_reference/data[1]"/>
        </plot>
       </DockArea>
      </DockSplitter>
@@ -111,44 +133,9 @@
  <previouslyLoaded_Streamer name="ROS2 Topic Subscriber"/>
  <!-- - - - - - - - - - - - - - - -->
  <customMathEquations>
-  <snippet name="q2_max">
+  <snippet name="tau_2_max">
    <global></global>
-   <function>return 3.1415 / 2</function>
-   <linked_source>/joint_states/joint1/position</linked_source>
-  </snippet>
-  <snippet name="q2_min">
-   <global></global>
-   <function>return - 3.1415 / 2</function>
-   <linked_source>/joint_states/joint1/position</linked_source>
-  </snippet>
-  <snippet name="q1_max">
-   <global></global>
-   <function>return 0</function>
-   <linked_source>/joint_states/joint1/position</linked_source>
-  </snippet>
-  <snippet name="q1_min">
-   <global></global>
-   <function>return - 3.1415</function>
-   <linked_source>/joint_states/joint1/position</linked_source>
-  </snippet>
-  <snippet name="q_dot_min">
-   <global></global>
-   <function>return - 2</function>
-   <linked_source>/joint_states/joint1/velocity</linked_source>
-  </snippet>
-  <snippet name="q_dot_max">
-   <global></global>
-   <function>return 2</function>
-   <linked_source>/joint_states/joint1/velocity</linked_source>
-  </snippet>
-  <snippet name="tau_1_max">
-   <global></global>
-   <function>return 25</function>
-   <linked_source>/joint_states/joint1/effort</linked_source>
-  </snippet>
-  <snippet name="tau_1_min">
-   <global></global>
-   <function>return - 25</function>
+   <function>return 10</function>
    <linked_source>/joint_states/joint1/effort</linked_source>
   </snippet>
   <snippet name="tau_2_min">
@@ -156,12 +143,48 @@
    <function>return -10</function>
    <linked_source>/joint_states/joint1/effort</linked_source>
   </snippet>
-  <snippet name="tau_2_max">
+  <snippet name="tau_1_min">
    <global></global>
-   <function>return 10</function>
+   <function>return - 25</function>
    <linked_source>/joint_states/joint1/effort</linked_source>
+  </snippet>
+  <snippet name="tau_1_max">
+   <global></global>
+   <function>return 25</function>
+   <linked_source>/joint_states/joint1/effort</linked_source>
+  </snippet>
+  <snippet name="q_dot_max">
+   <global></global>
+   <function>return 2</function>
+   <linked_source>/joint_states/joint1/velocity</linked_source>
+  </snippet>
+  <snippet name="q_dot_min">
+   <global></global>
+   <function>return - 2</function>
+   <linked_source>/joint_states/joint1/velocity</linked_source>
+  </snippet>
+  <snippet name="q1_min">
+   <global></global>
+   <function>return - 3.1415</function>
+   <linked_source>/joint_states/joint1/position</linked_source>
+  </snippet>
+  <snippet name="q1_max">
+   <global></global>
+   <function>return 0</function>
+   <linked_source>/joint_states/joint1/position</linked_source>
+  </snippet>
+  <snippet name="q2_min">
+   <global></global>
+   <function>return - 3.1415 / 2</function>
+   <linked_source>/joint_states/joint1/position</linked_source>
+  </snippet>
+  <snippet name="q2_max">
+   <global></global>
+   <function>return 3.1415 / 2</function>
+   <linked_source>/joint_states/joint1/position</linked_source>
   </snippet>
  </customMathEquations>
  <snippets/>
  <!-- - - - - - - - - - - - - - - -->
 </root>
+
