@@ -4,10 +4,11 @@
 # License: Apache License, Version 2.0
 # Author: Thibault Poignonec (tpoignonec@unistra.fr)
 
+from copy import deepcopy
+import numpy as np
+
 import rclpy
 from rclpy.node import Node
-
-import numpy as np
 
 from std_msgs.msg import Float64MultiArray
 
@@ -39,6 +40,7 @@ class InteractiveCartesianReference(Node):
         # create an interactive marker for our server
         origin_pendulum = np.array([0., -0.2, 2.])
         self.marker_position = origin_pendulum + np.array([0., 0., -2.])
+        self.ref_position_3D = deepcopy(self.marker_position)
 
         int_marker = InteractiveMarker()
         int_marker.header.frame_id = "world"
@@ -85,13 +87,20 @@ class InteractiveCartesianReference(Node):
         # 'commit' changes and send to all clients
         self.marker_server.applyChanges()
 
-        self.timer = self.create_timer(0.002, self.update)
+        self.Ts = 0.004  # 250 Hz
+        self.alpha_filter = 1 - np.exp(-self.Ts / 0.1)
+        self.timer = self.create_timer(self.Ts, self.update)
 
     def update(self):
+        # simple low-pass filter
+        self.ref_position_3D = self.alpha_filter * self.marker_position + \
+            (1 - self.alpha_filter) * self.ref_position_3D
+
+        # publish reference position
         msg = Float64MultiArray()
         ref_position = np.array([
-            self.marker_position[0],
-            self.marker_position[2]
+            self.ref_position_3D[0],
+            self.ref_position_3D[2]
         ])  # in XZ plane
         msg.data = [
             ref_position[0], ref_position[1],
