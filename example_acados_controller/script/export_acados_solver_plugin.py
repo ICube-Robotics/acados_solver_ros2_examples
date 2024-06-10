@@ -104,7 +104,7 @@ def export_acados_ocp() -> AcadosOcp:
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hpipm_mode = 'BALANCE'  # 'SPEED'  # 'ROBUST'
-    ocp.solver_options.qp_solver_warm_start = 2  # 0 = None, 1 = warm, 2 =hot
+    ocp.solver_options.qp_solver_warm_start = 1  # 0 = None, 1 = warm, 2 =hot
     ocp.solver_options.qp_solver_iter_max = 50
     ocp.solver_options.hessian_approx = 'EXACT'
 
