@@ -2,10 +2,10 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>example_acados_bringup</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <version>0.0.1</version>
+  <description>Bringup package for the Acados example application.</description>
   <maintainer email="tpoignonec@unistra.fr">tpoignonec</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache License 2.0</license>
 
   <exec_depend>example_acados_controller</exec_depend>
   <exec_depend>example_acados_description</exec_depend>
