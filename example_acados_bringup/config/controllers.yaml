@@ -19,5 +19,5 @@ nmpc_controller:
       N : 10
       Ts: 0.005  # 1 / update_rate
       Q_pos_diag : [1000., 1000.]
-      Q_vel_diag : [100., 100.]
+      Q_vel_diag : [20., 20.]
       R_diag : [1., 1.]
