@@ -95,7 +95,7 @@ CallbackReturn RRbot::on_init(
   }
   q_pos_ << hw_states_position_[0], hw_states_position_[1];
   q_vel_ << 0.0, 0.0,
-  q_acc_ << 0.0, 0.0;
+    q_acc_ << 0.0, 0.0;
   return CallbackReturn::SUCCESS;
 }
 // ------------------------------------------------------------------------------------------
