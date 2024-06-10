@@ -10,6 +10,9 @@
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
+  <buildtool_depend>eigen3_cmake_module</buildtool_depend>
+  <build_depend>eigen</build_depend>
+  
   <depend>pluginlib</depend>
   <depend>builtin_interfaces</depend>
   <depend>controller_interface</depend>
@@ -17,7 +20,6 @@
   <depend>rclcpp_lifecycle</depend>
   <depend>realtime_tools</depend>
   <depend>std_msgs</depend>
-  <depend>Eigen3</depend>
   <depend>tf2_eigen</depend>
 
   <depend>acados_solver_base</depend>

@@ -73,5 +73,6 @@ ament_export_dependencies(
   pluginlib
   rclcpp
   rclcpp_lifecycle
+  Eigen3
 )
 ament_package()
