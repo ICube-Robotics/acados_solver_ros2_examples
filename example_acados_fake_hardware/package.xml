@@ -2,12 +2,11 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>example_acados_fake_hardware</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>Demo hardware for a rrbot with simulated dynamics.</description>
 
   <author>Maciej Bednarczyk</author>
   <maintainer email="macbednarczyk@gmail.com">Maciej Bednarczyk</maintainer>
-
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -19,11 +18,9 @@
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
 
-  <exec_depend>rrbot_description</exec_depend>
-
+  <exec_depend>example_acados_description</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>xacro</exec_depend>
-
 
   <export>
     <build_type>ament_cmake</build_type>

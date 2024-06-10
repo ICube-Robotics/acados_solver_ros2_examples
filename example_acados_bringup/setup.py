@@ -29,7 +29,6 @@ setup(
     entry_points={
         'console_scripts': [
             'interactive_cartesian_reference = example_acados_bringup.interactive_cartesian_reference:main',  # noqa : E501
-            'publish_dummy_reference = example_acados_bringup.publish_dummy_reference:main'  # noqa : E501
         ],
     },
 )

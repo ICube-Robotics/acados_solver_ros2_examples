@@ -44,21 +44,20 @@ def export_acados_ocp() -> AcadosOcp:
     )
 
     # setup OCP
+    Ts = 0.01  # default prediction horizon length (num of sampling periods)
+    N = 10  # sampling time
+    Tf = N * Ts  # prediction horizon length (seconds)
+
     ocp = AcadosOcp()
     ocp.model = model
-    Ts = 0.01
-    N = 10
-    Tf = N * Ts
-
-    # set dimensions
     ocp.dims.N = N
 
-    # set default parameters
+    # set default parameter values
     ocp.parameter_values = np.zeros((model.p.shape[0],))
 
     # set cost
-    Q_err_p = ca.diag(sym_Q_pos_diag)
-    Q_err_p_dot = ca.diag(sym_Q_vel_diag)
+    Q_pos = ca.diag(sym_Q_pos_diag)
+    Q_vel = ca.diag(sym_Q_vel_diag)
     R = ca.diag(sym_R_diag)
 
     err_p = sym_p_ref - rrbot_model.sym_p
@@ -67,32 +66,33 @@ def export_acados_ocp() -> AcadosOcp:
     ocp.cost.cost_type = 'EXTERNAL'
     ocp.cost.cost_type_e = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost = \
-        err_p.T @ Q_err_p @ err_p \
-        + err_p_dot.T @ Q_err_p_dot @ err_p_dot \
+        err_p.T @ Q_pos @ err_p \
+        + err_p_dot.T @ Q_vel @ err_p_dot \
         + rrbot_model.sym_tau.T @ R @ rrbot_model.sym_tau
     # Note: the terminal cost should be chosen more carefully in practice.
     # This is not very rigorous, but enough for the purpose of this example.
     ocp.model.cost_expr_ext_cost_e = \
-        err_p.T @ Q_err_p @ err_p \
-        + err_p_dot.T @ Q_err_p_dot @ err_p_dot
+        err_p.T @ Q_pos @ err_p \
+        + err_p_dot.T @ Q_vel @ err_p_dot
 
-    # set constraints
-    x0 = np.zeros((model.x.shape[0],))
-    ocp.constraints.x0 = x0  # placeholder initial state
+    # Define the constraints
+    #   - placeholder for initial state
+    ocp.constraints.x0 = np.zeros((model.x.shape[0],))
 
-    # control constraints
+    #   - joint torque limits
     ocp.constraints.idxbu = np.array([0, 1])
     ocp.constraints.lbu = np.array([- tau_1_max, - tau_2_max])
     ocp.constraints.ubu = np.array([+ tau_1_max, + tau_2_max])
 
-    # state constraints
+    #   - joint position and velocity limits
+    ocp.constraints.idxbx = np.array(range(model.x.shape[0]))
     ocp.constraints.lbx = np.array(
         [q_1_bounds[0], q_2_bounds[0], -q_dot_max, -q_dot_max])
     ocp.constraints.ubx = np.array(
         [q_1_bounds[1], q_2_bounds[1], +q_dot_max, +q_dot_max])
-    ocp.constraints.idxbx = np.array(range(model.x.shape[0]))
 
-    # terminal (state) constraints
+    #    - terminal (state) constraints
+    #      (we simply replicate stage state constraints)
     ocp.constraints.lbx_e = ocp.constraints.lbx
     ocp.constraints.ubx_e = ocp.constraints.ubx
     ocp.constraints.idxbx_e = ocp.constraints.idxbx
@@ -100,12 +100,13 @@ def export_acados_ocp() -> AcadosOcp:
     # set solver options
     ocp.solver_options.tf = Tf
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+    ocp.solver_options.integrator_type = 'IRK'
+
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hpipm_mode = 'BALANCE'  # 'SPEED'  # 'ROBUST'
-    ocp.solver_options.qp_solver_warm_start = 2  # 0 = None, 1 = warm, 2 =hot
+    ocp.solver_options.qp_solver_warm_start = 1  # 0 = None, 1 = warm, 2 =hot
     ocp.solver_options.qp_solver_iter_max = 50
     ocp.solver_options.hessian_approx = 'EXACT'
-    ocp.solver_options.integrator_type = 'IRK'
 
     return ocp
 

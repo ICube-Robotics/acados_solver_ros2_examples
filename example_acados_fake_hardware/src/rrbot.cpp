@@ -175,8 +175,13 @@ hardware_interface::return_type RRbot::write(
     (l1_ * cos(q_pos_(0)) + lc2_ * cos(q_pos_(0) + q_pos_(1)))) * g_;
   gvec_(1) = m2_ * lc2_ * cos(q_pos_(0) + q_pos_(1)) * g_;
 
-  q_acc_ = bmat_.inverse() * (tau_ - cvec_ - gvec_);
+  // Add small viscous friction
+  auto tau_viscosity = 0.1 * q_vel_;
 
+  // Compute acceleration
+  q_acc_ = bmat_.inverse() * (tau_ - cvec_ - gvec_ - tau_viscosity);
+
+  // Update velocity and position
   q_vel_ = q_vel_ + q_acc_ * (period.nanoseconds() * 1e-9);
   q_pos_ = q_pos_ + q_vel_ * (period.nanoseconds() * 1e-9);
 
