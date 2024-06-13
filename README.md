@@ -2,7 +2,9 @@
 
 Example application for the acados_solver_ros2 package.
 
-**For more information, please check the [documentation](https://icube-robotics.github.io/acados_solver_ros2/) of `acados_driver_ros2`.**
+__Credits:__ the simulated robot is adapted from the tutorial package [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos).
+
+**For more information, please check the demo section of the [documentation of acados_driver_ros2](https://icube-robotics.github.io/acados_solver_ros2/).**
 
 ## Installation ##
 
@@ -55,6 +57,3 @@ ros2 launch example_acados_bringup launch_demo.launch.py
 [ICube Laboratory](https://icube.unistra.fr), [University of Strasbourg](https://www.unistra.fr/), France
 
 __Thibault Poignonec:__ [tpoignonec@unistra.fr](mailto:tpoignonec@unistra.fr), @github: [tpoignonec](https://github.com/ICube-Robotics)
-
-
-__Credits:__ the simulated robot is adapted from the tutorial package [git.unistra.fr/ros2_tutorials/rrbot](https://git.unistra.fr/ros2_tutorials/rrbot).
