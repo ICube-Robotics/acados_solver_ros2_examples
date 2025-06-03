@@ -4,7 +4,7 @@
   <name>example_acados_controller</name>
   <version>0.0.1</version>
   <description> Example ros2 controller using Acados solver plugins for NMPC. </description>
-  <maintainer email="tpoignonec@unistra.fr">tpoignonec</maintainer>
+  <maintainer email="thibault.poignonec@gmail.com">tpoignonec</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>

@@ -22,7 +22,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='tpoignonec',
-    maintainer_email='tpoignonec@unistra.fr',
+    maintainer_email='thibault.poignonec@gmail.com',
     description='Bringup package for the Acados example(s).',
     license='Apache-2.0',
     tests_require=['pytest'],
