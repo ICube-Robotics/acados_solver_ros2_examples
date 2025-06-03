@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Author: Thibault Poignonec (tpoignonec@unistra.fr)
+// Author: Thibault Poignonec (thibault.poignonec@gmail.com)
 
 #ifndef EXAMPLE_ACADOS_CONTROLLER__EXAMPLE_ACADOS_CONTROLLER_HPP_
 #define EXAMPLE_ACADOS_CONTROLLER__EXAMPLE_ACADOS_CONTROLLER_HPP_

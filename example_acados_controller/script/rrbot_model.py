@@ -1,6 +1,6 @@
 # Copyright 2024 ICUBE Laboratory, University of Strasbourg
 # License: Apache License, Version 2.0
-# Author: Thibault Poignonec (tpoignonec@unistra.fr)
+# Author: Thibault Poignonec (thibault.poignonec@gmail.com)
 
 from acados_template import AcadosModel
 import casadi as ca

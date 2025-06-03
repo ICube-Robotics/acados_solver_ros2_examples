@@ -2,8 +2,8 @@ repositories:
   external/acados_vendor_ros2:
     type: git
     url: https://github.com/ICube-Robotics/acados_vendor_ros2.git
-    version: v0.3.2
+    version: v0.5.0
   external/acados_solver_ros2:
     type: git
     url: https://github.com/ICube-Robotics/acados_solver_ros2.git
-    version: v0.2.1
+    version: v0.3.0

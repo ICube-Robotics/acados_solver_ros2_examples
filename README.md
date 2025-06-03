@@ -11,21 +11,20 @@ __Credits:__ the simulated robot is adapted from the tutorial package [ros2_cont
 1) Install dependencies
 
 ```bash
-source /opt/ros/humble/setup.bash
+source /opt/ros/jazzy/setup.bash
 
 mkdir ~/ros2_ws/src
 cd ~/ros2_ws/src
 git clone https://github.com/ICube-Robotics/acados_solver_ros2_examples.git
 vcs import . < acados_solver_ros2_examples/acados_solver_ros2_examples.repos
-rosdep install --ignore-src --from-paths . -y -r
+
+PIP_BREAK_SYSTEM_PACKAGES=1 rosdep install --ignore-src --from-paths . -y -r
 ```
 
 2) Build and install ros2 packages
 
 ```bash
 cd ~/ros2_ws/
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
-# N.B., build a second time to export the acados_template python package
 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
 ```
 
@@ -56,4 +55,4 @@ ros2 launch example_acados_bringup launch_demo.launch.py
 
 [ICube Laboratory](https://icube.unistra.fr), [University of Strasbourg](https://www.unistra.fr/), France
 
-__Thibault Poignonec:__ [tpoignonec@unistra.fr](mailto:tpoignonec@unistra.fr), @github: [tpoignonec](https://github.com/ICube-Robotics)
+__Thibault Poignonec:__ [thibault.poignonec@gmail.com](mailto:thibault.poignonec@gmail.com), @github: [tpoignonec](https://github.com/ICube-Robotics)
